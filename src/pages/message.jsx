@@ -2,7 +2,7 @@ import React from "react";
 import Box from '@mui/material/Box'
 import AppBar from '@mui/material/AppBar';
 import { Avatar, Button, Stack, TextField, Toolbar } from "@mui/material";
-import './message.css';
+import '../css/message.css';
 import EastIcon from '@mui/icons-material/East';
 
 export default function Message() {
