@@ -11,6 +11,8 @@ import Message from './pages/Message';
 import Follwer from './pages/Follower';
 import Profile from './pages/Profile';
 import Mypage from './pages/Mypage';
+import Search from './pages/Search';
+import Setting from './pages/Setting'
 
 const router = createBrowserRouter([
   {
@@ -26,6 +28,8 @@ const router = createBrowserRouter([
       { path: 'follwer', element: <Follwer /> },
       { path: 'profile', element: <Profile /> },
       { path: 'mypage', element: <Mypage /> },
+      { path: 'search', element: <Search /> },
+      { path: 'setting', element: <Setting /> },
       // { path: 'videos/watch/:videoId', element: <VideoDetail /> },
       // { path: 'signUp', element: <SignUp /> },
       // { path: 'signIn', element: <SignIn /> },
