@@ -1,6 +1,6 @@
 import { Card } from "@mui/material";
 import React from "react";
-import '../../../CSS/login,register.css';
+import '../../../css/login,register.css';
 
 export default function Login() {
     return (

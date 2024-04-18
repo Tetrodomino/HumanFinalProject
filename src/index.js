@@ -5,10 +5,12 @@ import reportWebVitals from './reportWebVitals';
 import App from './App';
 import NotFound from './pages/NotFound';
 import Home from './pages/Home';
-import Login from './pages/theme/light/Login';
+import Login from './pages/theme/dark/Login';
 import Register from './pages/theme/light/register';
 import Message from './pages/Message';
 import Follwer from './pages/Follower';
+import Profile from './pages/Profile';
+import Mypage from './pages/Mypage';
 
 const router = createBrowserRouter([
   {
@@ -22,6 +24,8 @@ const router = createBrowserRouter([
       { path: 'register', element: <Register /> },
       { path: 'message', element: <Message /> },
       { path: 'follwer', element: <Follwer /> },
+      { path: 'profile', element: <Profile /> },
+      { path: 'mypage', element: <Mypage /> },
       // { path: 'videos/watch/:videoId', element: <VideoDetail /> },
       // { path: 'signUp', element: <SignUp /> },
       // { path: 'signIn', element: <SignIn /> },

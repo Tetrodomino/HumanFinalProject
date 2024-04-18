@@ -14,10 +14,10 @@ export default function ProfileMenu() {
     return (
         <div>
             <Stack direction='row' alignItems='center'>
-                <Avatar sx={{marginRight: '10px'}} onClick={handleClick}>
+                <Avatar sx={{marginRight: '10px', cursor: 'pointer'}} onClick={handleClick}>
                     R
                 </Avatar>
-                <Stack onClick={handleClick}>
+                <Stack onClick={handleClick} sx={{cursor: 'pointer'}}>
                     <Typography>
                         O O O
                     </Typography>

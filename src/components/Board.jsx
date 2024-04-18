@@ -52,7 +52,7 @@ export default function Board() {
       <CardMedia
         component="img"
         height="194"
-        image="/img/sea.avif"
+        image="../../img/sea.avif"
         alt="Paella dish"
       />
       <CardContent>
