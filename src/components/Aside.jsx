@@ -18,7 +18,8 @@ export default function Aside() {
       </button>
       <AlertModal />
       <button className='asideStyle'>
-        <BookmarkIcon className='iconStyle' /> {/* 북마크 아이콘 */}
+        <BookmarkIcon className='iconStyle' /> 
+        {/* 북마크 아이콘 */}
         북마크
       </button>
       <button className='asideStyle'>

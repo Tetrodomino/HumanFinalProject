@@ -3,15 +3,17 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 import App from './App';
+
 import NotFound from './pages/NotFound';
 import Home from './pages/Home';
 import Login from './pages/Login';
-import Register from './pages/register';
+import Register from './pages/Register';
 import Message from './pages/Message';
-import Follwer from './pages/Follower';
+import Follower from './pages/Follower';
 import Mypage from './pages/Mypage';
 import Profile from './pages/Profile';
 import Setting from './pages/Setting';
+import Search from './pages/Search';
 
 const router = createBrowserRouter([
   {
@@ -24,10 +26,11 @@ const router = createBrowserRouter([
       { path: 'login', element: <Login /> },
       { path: 'register', element: <Register /> },
       { path: 'message', element: <Message /> },
-      { path: 'follower', element: <Follwer /> },
+      { path: 'follower', element: <Follower /> },
       { path: 'mypage', element: <Mypage /> },
       { path: 'profile', element: <Profile /> },
       { path: 'setting', element: <Setting /> },
+      { path: 'search', element: <Search /> },
     ]
   }
 ]);
