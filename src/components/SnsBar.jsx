@@ -51,7 +51,7 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
 }));
 
 export default function SnsBar() {
-  const logoImage = '/img/flownary_gradation.png';
+  const logoImage = '/img/LightLogo.png';
   return (
     <Box sx={{ flexGrow: 1 }}>
       <AppBar position="static" sx={{ background: 'linear-gradient(to right, #7B68EE, rgb(28, 0, 53))', boxShadow: 'none' }}>
