@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@mui/material";
-import { Link } from "react-router-dom";
+import { login } from "../api/firebase";
+
 import '../css/theme.css'; // CSS 임포트
 
 export default function Login() {
@@ -16,29 +18,47 @@ export default function Login() {
     const logoImage = theme === 'light' ? '/img/LightLogo.png' : '/img/DarkLogo.png';
     const HelloLogo = theme === 'light' ? '/img/HelloLight.png' : '/img/HelloBlack.png';
 
+    const [userInfo, setUserInfo] = useState({ email: '', password: '' });
+    const navigate = useNavigate();
+    const handleChange = e => {
+        setUserInfo({ ...userInfo, [e.target.name]: e.target.value });
+    }
+    const handleSubmit = e => {
+        e.preventDefault();
+        try {
+            login(userInfo);
+            navigate('/');
+        } catch (error) {
+            alert("이메일 또는 비밀번호가 잘못되었습니다.");
+            console.error(error);
+        }
+    }
+
+
     return (
         <div className={`background ${theme}`} style={{
             backgroundImage: `url(${backgroundImage})`,
             backgroundSize: 'cover',
             backgroundPosition: 'center',
         }}>
-
             <Card id='cardMain' className="cardMain">
                 <div id='login-box' className="loginBox">
                     <div className={`welcome-message`}>
-                        <img src={HelloLogo} style={{ maxWidth: '10%' }} />
+                        <img src={HelloLogo} alt='Hello' style={{ maxWidth: '10%' }} />
                     </div>
-                    <img src={logoImage} style={{ maxWidth: '20%' }} />
+                    <img src={logoImage} alt='LOGO' style={{ maxWidth: '20%' }} />
 
                     <br />
-                    <input id="id" placeholder="닉네임 혹은 이메일" className="commonInputStyle" />
+                    <input type="email" name='email' placeholder="닉네임 혹은 이메일" className="commonInputStyle"
+                        onChange={handleChange} />
                     <br />
-                    <input id='pwd' type="password" placeholder="비밀번호" className="commonInputStyle" />
+                    <input type="password" name='password' placeholder="비밀번호" className="commonInputStyle"
+                        onChange={handleChange} />
                     <br />
-                    <button className="fill">로그인</button>
+                    <button className="fill" onClick={handleSubmit}>로그인</button>
+                    <br /><br />
                     <p style={{ color: theme === 'light' ? '#dca3e7' : '#ffffff' }}>혹시 계정이 없으신가요?</p>
                     <div>
-                        <br />
                         <Link to="/register" className={`custom-button ${theme}`}>가입하기</Link>
                     </div>
                     <br />
