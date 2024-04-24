@@ -11,7 +11,7 @@ const firebaseConfig = {
 
 // eslint-disable-next-line
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
+const auth = getAuth();
 
 export function login({ email, password }) {
   signInWithEmailAndPassword(auth, email, password)
@@ -34,4 +34,3 @@ export function logout() {
 //     callback(user);
 //   });
 // }
-
