@@ -5,6 +5,7 @@ import { Card } from "@mui/material";
 import '../css/theme.css';
 import { initializeApp } from 'firebase/app';
 import { GoogleAuthProvider, getAuth, signInWithPopup, createUserWithEmailAndPassword, fetchSignInMethodsForEmail } from 'firebase/auth';
+import axios from "axios";
 
 export default function Register() {
     // 테마설정
@@ -110,7 +111,19 @@ export default function Register() {
         await createUserWithEmailAndPassword(auth, userInfo.email, userInfo.password)
             .then(() => {
                 console.log("회원가입 성공");
+
+                //////////////////////////// 4.25 추가된 부분 ////////////////////////////////
                 alert('회원가입 성공. 환영합니다.');
+                axios.get("/user/register", {
+                    params: {
+                        email: userInfo.email,
+                        pwd: userInfo.password,
+                    }
+                }).catch((error) => {
+                    console.log(error)
+                })
+                /////////////////////////////////////////////////////////////////////////////
+                
                 setTimeout(() => {
                     navigate('/login');
                 }, 1000); // 1000 밀리초 = 1초 딜레이
