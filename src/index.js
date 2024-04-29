@@ -13,6 +13,9 @@ import Mypage from './sections/profile/Profile/Mypage';
 import Profile from './sections/profile/Profile/Profile';
 import Setting from './sections/setting/Setting/Setting';
 import Search from './sections/search/Search/Search';
+import React_to_Spring from './sections/React_to_Spring';
+import Cloudinary2 from './sections/sign/Cloudinary';
+import ImageUpload from './sections/sign/ImageUpload';
 
 // 템플릿
 
@@ -33,6 +36,9 @@ const router = createBrowserRouter([
       { path: 'profile', element: <Profile /> },
       { path: 'setting', element: <Setting /> },
       { path: 'search', element: <Search /> },
+      { path: 'test', element: <React_to_Spring /> },
+      { path: 'cloudinary', element: <Cloudinary2 /> },
+      { path: 'image', element: <ImageUpload /> },
     ]
   }
 ]);
