@@ -1,6 +1,6 @@
 // 기본
 import React, { useState } from "react";
-import { Card, Stack, Button, Grid, Modal, Typography, Box } from "@mui/material";
+import { Card, Stack, Button, Grid, Modal, Typography, Box} from "@mui/material";
 
 // 아코디언
 import { Accordion, AccordionSummary, AccordionDetails } from '@mui/material';
@@ -14,12 +14,17 @@ import CreateIcon from '@mui/icons-material/Create';
 // css 연결
 import './posting.css';
 import { AntSwitch } from './postingStyle.jsx';
+import { FindImage, UploadImage } from "../../api/image.js";
+
+
+import axios from "axios";
 
 export default function Posting() {
     // 창열고 닫기
     const [open, setOpen] = useState(false);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
+    const [url, setUrl] = useState("");
 
     // 아코디언
     const [expanded, setExpanded] = React.useState('panel1');
@@ -34,7 +39,7 @@ export default function Posting() {
 
     // 파일이 선택되었을 때 호출되는 함수
     // 파일이 선택되었을 때 호출되는 함수
-    const handleFileChange = (event) => {
+    const handleFileChange = async (event) => {
         // 이미지가 5개를 초과하지 않도록 확인
         if (event.target.files.length + images.length > 5) {
             alert('최대 5개의 이미지만 업로드할 수 있습니다.');
@@ -44,7 +49,23 @@ export default function Posting() {
         setImages(images.concat(selectedFiles)); // 기존 이미지 배열에 추가
         const newPreviewUrls = selectedFiles.map((file) => URL.createObjectURL(file));
         setPreviewUrls(previewUrls.concat(newPreviewUrls)); // 미리보기 URL 배열에 추가
+        UploadImage(event.target.files[0])
     };
+    
+    const handleFormSubmit = (event) => {
+        event.preventDefault();
+        handleClose();
+        axios.post('/board/insert', {
+            // image: 
+        }) // http://localhost:8090/board/insert 주소를 호출
+        .then(response => {
+            console.log(response.data);
+          })
+          .catch(error => {
+            console.error(error);
+          });
+    };
+
 
     // 이미지 삭제 핸들러
     const handleRemoveImage = (index) => {
@@ -55,7 +76,6 @@ export default function Posting() {
     // 댓글 입력창 구현 - 이모티콘
     const [text, setText] = useState('');
     function handleOnEnter(text) { console.log('enter', text) }
-
 
     return (
         <>
@@ -80,10 +100,11 @@ export default function Posting() {
             >
                 <Box className='modalStyle'>
                     {/* 모달의 상단에 있는 헤더 부분 */}
+                    <form onSubmit={handleFormSubmit}>
                     <Stack direction="row" justifyContent="space-between" alignItems="center" marginBottom={2}>
                         <Button color="primary" onClick={handleClose}>창 닫기</Button>
                         <Typography variant="h6" component="h2" fontWeight="bold">새 게시물 만들기</Typography>
-                        <Button color="primary">작성</Button>
+                        <Button type="submit" color="primary">작성</Button>
                     </Stack>
 
                     {/* 구분선 */}
@@ -141,6 +162,7 @@ export default function Posting() {
                             </Typography>
                         </AccordionDetails>
                     </Accordion>
+                    
 
                     {/* 게시물 공개 비공개 */}
                     <Accordion expanded={expanded === 'panel3'} onChange={handleChange('panel3')}>
@@ -153,7 +175,9 @@ export default function Posting() {
                             <Typography sx={{ marginLeft: '1em' }}>공개</Typography>
                         </AccordionDetails>
                     </Accordion>
+                </form>
                 </Box>
+                
             </Modal >
         </>
     );

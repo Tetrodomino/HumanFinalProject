@@ -47,10 +47,10 @@ export default function Register() {
             const provider = new GoogleAuthProvider();
             const data = await signInWithPopup(auth, provider);
             console.log(data);
-            axios.get("/user/register", {
+            axios.get("http://localhost:8090/user/register", {
                 params: {
                     email: data.user.email,
-                    pwd: null,
+                    pwd: 'nn',
                     hashuid: data.user.uid,
                     provider: 1,
                 }
@@ -135,11 +135,11 @@ export default function Register() {
                     text: "OK 버튼을 눌러주세요!",
                     icon: "success"
                 });
-                axios.get("/user/register", {
+                axios.get("http://localhost:8090/user/register", {
                     params: {
                         email: userInfo.email,
                         pwd: userInfo.password,
-                        hashuid: null,
+                        hashuid: 'nonGoogle',
                         provider: 0,
                     }
                 }).catch((error) => {

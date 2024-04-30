@@ -1,7 +1,8 @@
 // 기본
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Card } from "@mui/material";
+import { SetWithExpiry } from "../../api/LocalStorage";  
 
 // firebase 연결
 import { login } from "../../api/firebase";
@@ -12,6 +13,7 @@ import './theme.css'; // CSS 임포트
 
 // alert 창
 import Swal from "sweetalert2";
+import axios from "axios";
 
 export default function Login() {
     const [theme, setTheme] = useState('light'); // 초기 테마를 'light'로 설정
@@ -39,7 +41,7 @@ export default function Login() {
         try {
             const auth = getAuth();
             const provider = new GoogleAuthProvider();
-            await signInWithPopup(auth, provider);
+            const data = await signInWithPopup(auth, provider);
             Swal.fire({
                 icon: 'success',
                 title: "구글 로그인에 성공했습니다.",
@@ -59,15 +61,28 @@ export default function Login() {
                 }
             });
             console.log("구글 로그인 성공!");
+
+            axios.get('http://localhost:8090/user/getUserEmail', {
+                params: {
+                    email: data.user.email
+                }
+            }).then(res => {
+                SetWithExpiry("uid", res.data.id, 180);
+                SetWithExpiry("email", res.data.email, 180);
+                SetWithExpiry("profile", res.data.profile, 180);
+            }).catch(error => console.log(error));
+
+
             navigate('/');
         } catch (error) {
             console.error("구글 로그인 오류:", error);
         }
     };
 
+    
     const handleSubmit = async e => {
         e.preventDefault();
-
+        
         try {
             // 이메일이 빈칸인 경우
             if (!userInfo.email) {
@@ -77,7 +92,7 @@ export default function Login() {
                 });
                 return;
             }
-
+            
             // 비밀번호가 빈칸인 경우
             if (!userInfo.password) {
                 Swal.fire({
@@ -86,12 +101,12 @@ export default function Login() {
                 });
                 return;
             }
-
+            
             // Firebase Authentication을 통해 사용자를 인증합니다.
-            const user = await signInWithEmailAndPassword(auth, userInfo.email, userInfo.password);
+            const checkuser = await signInWithEmailAndPassword(auth, userInfo.email, userInfo.password);
 
             // 사용자가 존재하는 경우
-            if (user) {
+            if (checkuser) {
                 login(userInfo);
                 Swal.fire({
                     position: "center",
@@ -100,6 +115,17 @@ export default function Login() {
                     showConfirmButton: false,
                     timer: 1200
                 });
+                
+                axios.get('http://localhost:8090/user/getUserEmail', {
+                    params: {
+                        email: userInfo.email
+                    }
+                }).then(res => {
+                    SetWithExpiry("uid", res.data.id, 180);
+                    SetWithExpiry("email", res.data.email, 180);
+                    SetWithExpiry("profile", res.data.profile, 180);
+                }).catch(error => console.log(error));
+                
                 navigate('/');
             }
         } catch (error) {
@@ -113,8 +139,7 @@ export default function Login() {
             console.error(error);
         }
     }
-
-
+    
     return (
         <div className={`background ${theme}`} style={{
             backgroundImage: `url(${backgroundImage})`,
