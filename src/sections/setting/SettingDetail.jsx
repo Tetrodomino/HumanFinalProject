@@ -5,7 +5,7 @@ import {
   FormGroup, Typography, Stack, InputLabel, MenuItem, FormControl, Select, Avatar,
   Input
 } from "@mui/material";
-import { Cloudinary } from "@cloudinary/url-gen/index";
+import { Cloudinary, CloudinaryImage } from "@cloudinary/url-gen/index";
 import { FindImage, UploadImage } from "../../api/image.js";
 
 // 아이콘
@@ -19,6 +19,8 @@ import { GetWithExpiry } from "../../api/LocalStorage.js";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { AdvancedImage } from "@cloudinary/react";
+import { fill } from "@cloudinary/url-gen/actions/resize";
+import { byRadius } from "@cloudinary/url-gen/actions/roundCorners";
 
 export default function SettingDetail() {
   const navigate = useNavigate();
@@ -34,7 +36,7 @@ export default function SettingDetail() {
   const [preview, setPreview] = useState(null);
   const [image, setImage] = useState(null);
   const [change, setChange] = useState(0);
-  const [myimage, setMyimage] = useState(null);
+  const [myimage, setMyimage] = useState(new CloudinaryImage());
 
   useEffect(() => {
     if (uid == null)
@@ -63,7 +65,7 @@ export default function SettingDetail() {
         }
       }).catch(error => console.log(error));
     }
-  }, [])
+  }, []);
   
   // 성별
   const [gender, setGender] = useState('');
@@ -101,46 +103,63 @@ export default function SettingDetail() {
     setStat(e.target.value);
   };
           
+  // 버튼 눌러서 수정사항 반영
   const submitProfile = async () => {
-    console.log(uname);
-    console.log(nickname);
-    console.log(statusMessage);
-    console.log(profile);
-    console.log(uid);
+
+    // 프로필 이미지가 바뀌지 않았을 경우
     if (change != 1)
     {
-      axios.post('http://localhost:8090/user/update', null, {
-        params: {
-          uname: uname,
-          nickname: nickname,
-          profile: profile,
-          statusMessage: statusMessage,
-          snsDomain: null,
-          uid: uid,
-          birth: null,
-          tel: null,
-        }
+      // axios.post('http://localhost:8090/user/update', null, {
+      //   params: {
+      //     uname: uname,
+      //     nickname: nickname,
+      //     profile: profile,
+      //     statusMessage: statusMessage,
+      //     snsDomain: null,
+      //     uid: uid,
+      //     birth: null,
+      //     tel: null,
+      //   }
+      // }).catch(error => console.log(error));
+
+      var sendData = JSON.stringify({
+        uid: uid,
+        uname: uname,
+        nickname: nickname,
+        profile: profile,
+        statusMessage: statusMessage,
+        snsDomain: null,
+        birth: null,
+        tel: null
+      })
+      
+      axios({
+        method: "POST",
+        url: 'http://localhost:8090/user/update',
+        data: sendData,
+        headers: {'Content-Type': 'application/json'}
       }).catch(error => console.log(error));
     }
-    else
+    else // 프로필 이미지가 바뀌었을 경우
     {
-      console.log(image);
-      const url = UploadImage(image);
-      const url2 = url.then((e) => {
+      const url = await UploadImage(image); // 새로 설정된 프로필 이미지를 cloudinary에 올리기
 
+      var sendData = JSON.stringify({
+        uid: uid,
+        uname: uname,
+        nickname: nickname,
+        profile: url.public_id, // url의 public_id만 빼내기
+        statusMessage: statusMessage,
+        snsDomain: null,
+        birth: null,
+        tel: null
       })
-      console.log(url);
-      axios.post('http://localhost:8090/user/update', null,  {
-        params: {
-          uname: uname,
-          nickname: nickname,
-          profile: url,
-          statusMessage: statusMessage,
-          snsDomain: null,
-          uid: uid,
-          birth: null,
-          tel: null,
-        }
+      
+      axios({
+        method: "POST",
+        url: 'http://localhost:8090/user/update',
+        data: sendData,
+        headers: {'Content-Type': 'application/json'}
       }).catch(error => console.log(error));
     }
 
@@ -148,6 +167,7 @@ export default function SettingDetail() {
     navigate('/setting');
   };
 
+  // 이미지 업로드 시 프리뷰 이미지 바뀌게 하기
   const handleImageChange = (event) => {
     const file = event.target.files[0];
     if (event.target.files.length === 0)
@@ -168,9 +188,11 @@ export default function SettingDetail() {
     }
   };
 
+  // 리셋 시 초기화
   const handleResetClick = () => {
     setPreview(null);
     setImage(null);
+    setChange(0);
   };
 
   return (
@@ -187,8 +209,12 @@ export default function SettingDetail() {
 
           {/* 프로필 사진, 닉네임, 편집 영역 */}
           <div className="profile">
-            <Avatar alt="H" src="/img/profile/profile1.jpg"
-              style={{ marginLeft: '20px', width: '20%', height: '100%' }} />
+            {/* 기본 설정된 프사가 없으면 나오는 부분 */}
+            { !profile && <Avatar alt="H" src="/img/profile/profile1.jpg"
+              style={{ marginLeft: '20px', width: '20%', height: '100%' }} /> }
+            {/* 기본 설정된 프사가 있으면 나오는 부분 */}
+            { profile && <AdvancedImage 
+            cldImg={myimage} style={{width: '100px', height: '100px', borderRadius: '50%'}} /> } 
             <p className="nickname">닉네임</p>
             <Button className="profile-edit-button"
               onClick={openModal}>프로필 편집</Button>
@@ -280,8 +306,12 @@ export default function SettingDetail() {
                   </div>
                 </label>
                 <div>
-                  {preview && <img src={preview} alt="preview" className="w-full" /> }
-                  {myimage && <AdvancedImage cldImg={myimage} /> }
+                  {/* 이미지를 선택하면 프리뷰 이미지만 나오게 하기 */}
+                  {(preview) && <img src={preview} alt="preview" className="w-full"
+                  style={{width: '100px', height:'100px', borderRadius: '50%'}} /> }
+                  {/* 이미지를 선택하지 않으면 기존 프로필 이미지가 나오게 하기 */}
+                  {(profile && !preview) && <AdvancedImage 
+                  cldImg={myimage} style={{width: '100px', height: '100px', borderRadius: '50%'}} /> }
                 </div>
               </div>
 

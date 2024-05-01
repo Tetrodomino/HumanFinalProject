@@ -24,7 +24,7 @@ export async function UploadImage(image) {
             }
         );
         const res = await response.json();
-        return res.public_id;
+        return res;
     } catch (error) {
         console.log(error);
         return null;
