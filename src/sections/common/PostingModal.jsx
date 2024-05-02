@@ -14,7 +14,7 @@ import CreateIcon from '@mui/icons-material/Create';
 // css 연결
 import './posting.css';
 import { AntSwitch } from './postingStyle.jsx';
-import { FindImage, UploadImage } from "../../api/image.js";
+import { FindImage, UploadImage, UploadImage2 } from "../../api/image.js";
 import { GetWithExpiry } from "../../api/LocalStorage.js";
 
 import axios from "axios";
@@ -53,7 +53,6 @@ export default function Posting() {
 
     // 창열고 닫기
     const [open, setOpen] = useState(false);
-    const [imageList, setImageList] = useState([]);
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
@@ -96,15 +95,12 @@ export default function Posting() {
         event.preventDefault();
         handleClose();
 
-        images.map(async (image) => {
-            const url = await UploadImage(image);
-            setImageList(imageList.concat([url.public_id]));
-        });
-        console.log(imageList);
-        console.log(imageList.join(","));
-        console.log(imageList.toString());
-        console.log(title);
-        console.log(text);
+        const imageList = await Promise.all(
+            images.map(async (image) => {
+                const url = await UploadImage(image);
+                return url.public_id;
+            })
+        );
 
         var sendData = JSON.stringify({
             uid: uid,
@@ -124,13 +120,11 @@ export default function Posting() {
         }).catch(error => console.log(error));
 
         setImages([]);
-        setImageList([]);
+        //setImageList([]);
         setText('');
         setTitle('');
         setPreviewUrls([]);
     };
-
-
 
     // 이미지 삭제 핸들러
     const handleRemoveImage = (index) => {

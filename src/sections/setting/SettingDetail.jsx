@@ -1,11 +1,12 @@
 // 기본
 import React, { useEffect, useState } from "react";
 import {
-  Box, Button, Card, TextField, Modal, InputAdornment, FormControlLabel,
-  FormGroup, Typography, Stack, InputLabel, MenuItem, FormControl, Select, Avatar,
-  Input
+  Box, Button, Card, TextField, InputAdornment,
+  Typography, InputLabel, MenuItem, FormControl, Select, Avatar,
+  IconButton,
+  Grid
 } from "@mui/material";
-import { Cloudinary, CloudinaryImage } from "@cloudinary/url-gen/index";
+// import { Cloudinary } from "@cloudinary/url-gen/index";
 import { FindImage, UploadImage } from "../../api/image.js";
 
 // 아이콘
@@ -14,41 +15,107 @@ import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 
 // css 연결
 import './setting.css';
-import { MaterialUISwitch, AntSwitch } from './SettingSwitchStyles.jsx';
 import { GetWithExpiry } from "../../api/LocalStorage.js";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
-import { AdvancedImage } from "@cloudinary/react";
-import { fill } from "@cloudinary/url-gen/actions/resize";
-import { byRadius } from "@cloudinary/url-gen/actions/roundCorners";
+// import { AdvancedImage } from "@cloudinary/react";
+// import { bool } from "prop-types";
+
+// alert 창
+import Swal from "sweetalert2";
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
+import { styled } from '@mui/material/styles';
+
+const LightTooltip = styled(({ className, ...props }) => (
+  <Tooltip arrow {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
+  [`& .${tooltipClasses.tooltip}`]: {
+    boxShadow: theme.shadows[1],
+    fontSize: 16,
+  },
+}));
 
 export default function SettingDetail() {
   const navigate = useNavigate();
-  
+
+
+  const handleImageChange = (event) => {
+    const file = event.target.files[0];
+    if (event.target.files.length === 0) {
+      return;
+    }
+    else {
+      setImage(file);
+      setChange(1);
+
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+
+      reader.onload = () => {
+        setPreview(reader.result);
+      };
+    }
+  };
+
   // localStorage를 이용해서 user 받아오기
   const uid = parseInt(GetWithExpiry("uid"));
+  const email = GetWithExpiry("email");
   const [user, setUser] = useState({});
-  
+
   const [uname, setUname] = useState('');
   const [nickname, setNickname] = useState('');
   const [statusMessage, setStat] = useState('');
-  const [profile, setProfile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [image, setImage] = useState(null);
+  const [profile, setProfile] = useState('');
+  const [image, setImage] = useState('');
+  const [birth, setBirth] = useState(new Date());
+  const [tel, setTel] = useState('');
+  const [snsDomain, setSnsDomain] = useState('');
+
+  const [pwd1, setPwd1] = useState('');
+  const [pwd2, setPwd2] = useState('');
+  const [checkingPwd, setCheckingPwd] = useState(0);
+  const [checkingNickName, setCheckingNickname] = useState(0);
+  const [checkingTel, setCheckingTel] = useState(0);
+
+  const [status, setStatus] = useState('0');
+  const [preview, setPreview] = useState('');
+
+
   const [change, setChange] = useState(0);
-  const [myimage, setMyimage] = useState(new CloudinaryImage());
+  const [myimage, setMyimage] = useState('');
+
+  // 성별
+  const [gender, setGender] = useState('');
 
   useEffect(() => {
-    if (uid == null)
-    {
+    if (uid == null) {
       //alert('로그인이 필요합니다.');
       navigate('/login');
     }
   }, []);
-  
+
+  // 핸드폰 번호 입력 시 자동으로 '-' 추가
+  const handleTelChange = (e) => {
+    const input = e.target.value.replace(/[^0-9]/g, '');
+    let formattedTel = '';
+
+    if (input.length > 2) {
+      formattedTel += input.substring(0, 3) + '-';
+      if (input.length > 6) {
+        formattedTel += input.substring(3, 7) + '-';
+        formattedTel += input.substring(7, 11);
+      } else {
+        formattedTel += input.substring(3, input.length);
+      }
+    } else {
+      formattedTel = input;
+    }
+
+    setTel(formattedTel);
+  };
+
   useEffect(() => {
-    if (uid != null)
-    {
+    if (uid != null) {
       axios.get('http://localhost:8090/user/getUser', {
         params: {
           uid: uid,
@@ -58,22 +125,18 @@ export default function SettingDetail() {
         setUname(res.data.uname);
         setNickname(res.data.nickname);
         setStat(res.data.statusMessage);
-        if (res.data.profile != null)
-        {
+        if (res.data.profile != null) {
           setProfile(res.data.profile);
           setMyimage(FindImage(res.data.profile));
         }
+        setBirth(res.data.birth);
+        setTel(res.data.tel);
+        setSnsDomain(res.data.snsDomain);
       }).catch(error => console.log(error));
     }
-  }, []);
-  
-  // 성별
-  const [gender, setGender] = useState('');
-  // 성별 이벤트
-  const handleChange = (event) => {
-    setGender(event.target.value);
-  };
-  
+  }, [])
+
+
   // 비밀번호 숨기기/보이기
   const [showPassword, setShowPassword] = useState(false);
   // 비밀번호 숨기기/보이기 토글
@@ -81,355 +144,529 @@ export default function SettingDetail() {
     setShowPassword(!showPassword);
   };
 
-  // Modal 열기,닫기
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  // 모달 이벤트 - 열기
-  const openModal = () => { setIsModalOpen(true); };
-  // 모달 이벤트 - 닫힘
-  const closeModal = () => { setIsModalOpen(false); };
-  
+
   // const handlePasswordChange = () => {
   //     // 변경 확인 버튼 클릭 시 실행될 로직
   //     console.log('비밀번호 변경 확인');
   // };
-  
-  const handleUname = (e) => {
-    setUname(e.target.value);
-  };
-  const handleNickname = (e) => {
-    setNickname(e.target.value);
-  };
-  const handleStat = (e) => {
-    setStat(e.target.value);
-  };
-          
-  // 버튼 눌러서 수정사항 반영
+  // 설정 변경
+  const handleStat = (e) => { setStat(e.target.value); };
+  const handleGender = (event) => { setGender(event.target.value === 'man' ? 0 : (event.target.value === 'woman' ? 1 : 2)); };
+
+  const handleUname = (e) => { setUname(e.target.value); };
+  const handleNickname = (e) => { setNickname(e.target.value); };
+  const handleSnsDomain = (e) => { setSnsDomain(e.target.value); };
+  const handleTel = (e) => { setTel(e.target.value); };
+
+  const handlePwd1 = (e) => { setPwd1(e.target.value); };
+  const handlePwd2 = (e) => { setPwd2(e.target.value); };
+
+  const handleBirthChange = (e) => { setBirth(e.target.value); };
+
+
   const submitProfile = async () => {
-
-    // 프로필 이미지가 바뀌지 않았을 경우
-    if (change != 1)
-    {
-      // axios.post('http://localhost:8090/user/update', null, {
-      //   params: {
-      //     uname: uname,
-      //     nickname: nickname,
-      //     profile: profile,
-      //     statusMessage: statusMessage,
-      //     snsDomain: null,
-      //     uid: uid,
-      //     birth: null,
-      //     tel: null,
-      //   }
-      // }).catch(error => console.log(error));
-
-      var sendData = JSON.stringify({
-        uid: uid,
-        uname: uname,
-        nickname: nickname,
-        profile: profile,
-        statusMessage: statusMessage,
-        snsDomain: null,
-        birth: null,
-        tel: null
-      })
-      
-      axios({
-        method: "POST",
-        url: 'http://localhost:8090/user/update',
-        data: sendData,
-        headers: {'Content-Type': 'application/json'}
-      }).catch(error => console.log(error));
+    if (checkingNickName === 0) {
+      Swal.fire({
+        title: "닉네임 중복 확인을 해주세요",
+        icon: "warning"
+      });
+      return;
     }
-    else // 프로필 이미지가 바뀌었을 경우
-    {
-      const url = await UploadImage(image); // 새로 설정된 프로필 이미지를 cloudinary에 올리기
-
-      var sendData = JSON.stringify({
-        uid: uid,
+    if (checkingTel === 0) {
+      Swal.fire({
+        title: "전화번호 중복 확인을 해주세요",
+        icon: "warning"
+      });
+      return;
+    }
+    if (checkingPwd === 0) {
+      Swal.fire({
+        title: "비밀번호 확인을 해주세요",
+        icon: "warning"
+      });
+      return;
+    }
+    if (change !== 1) {
+      axios.post('http://localhost:8090/user/update', {
+        pwd: pwd1,
         uname: uname,
         nickname: nickname,
-        profile: url.public_id, // url의 public_id만 빼내기
+        profile: null,
         statusMessage: statusMessage,
-        snsDomain: null,
-        birth: null,
-        tel: null
-      })
-      
-      axios({
-        method: "POST",
-        url: 'http://localhost:8090/user/update',
-        data: sendData,
-        headers: {'Content-Type': 'application/json'}
+        snsDomain: snsDomain,
+        uid: uid,
+        gender: gender,
+        birth: birth,
+        tel: tel,
+      }).catch(error => console.log(error));
+    } else {
+      console.log(image);
+      const url = UploadImage(image);
+      const url2 = url.then((e) => {
+
+      });
+      console.log(url);
+      axios.post('http://localhost:8090/user/update', {
+        pwd: pwd1,
+        uname: uname,
+        nickname: nickname,
+        profile: url,
+        statusMessage: statusMessage,
+        snsDomain: snsDomain,
+        uid: uid,
+        gender: gender,
+        birth: birth,
+        tel: tel,
       }).catch(error => console.log(error));
     }
 
-    setIsModalOpen(false);
+    Swal.fire({
+      icon: 'success',
+      title: "설정 변경에 성공했습니다.",
+      showClass: {
+        popup: `
+          animate__animated
+          animate__fadeInUp
+          animate__faster
+        `
+      },
+      hideClass: {
+        popup: `
+          animate__animated
+          animate__fadeOutDown
+          animate__faster
+        `
+      }
+    });
     navigate('/setting');
   };
 
-  // 이미지 업로드 시 프리뷰 이미지 바뀌게 하기
-  const handleImageChange = (event) => {
-    const file = event.target.files[0];
-    if (event.target.files.length === 0)
-    {
+
+  
+
+  const chectPwd = async e => {
+    e.preventDefault();
+
+    // 비밀번호 확인 - 일치여부
+    if (pwd1 !== pwd2) {
+      Swal.fire({
+        title: "비밀번호가 일치하지 않습니다.",
+        text: "다시 입력해주세요",
+        icon: "warning"
+      });
       return;
     }
-    else
-    {
-      setImage(file);
-      setChange(1);
-  
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-  
-      reader.onload = () => {
-        setPreview(reader.result);
-      };
+    // 비밀번호 확인 - 일치여부, 형식
+    if (pwd1 < 6) { // 파이어베이스 비밀번호 길이 제한
+      Swal.fire({
+        text: "비밀번호는 6자리 이상이어야 합니다.",
+        icon: "warning"
+      });
+      return;
     }
-  };
 
-  // 리셋 시 초기화
+    if (!/[0-9]/.test(pwd1) || !/[!@#$%^&*?]/.test(pwd1)) { // 정규식으로 비밀번호 확인
+      Swal.fire({
+        width: '50%',
+        title: '유효성 검사 경고',
+        html: `비밀번호는 숫자와 특수문자(!@#$%^&amp;*?)를 포함해야합니다.`,
+        icon: 'warning'
+      });
+      return;
+    }
+    Swal.fire({
+      icon: 'success',
+      title: "비밀번호가 일치합니다.",
+      showClass: {
+        popup: `
+          animate__animated
+          animate__fadeInUp
+          animate__faster
+        `
+      },
+      hideClass: {
+        popup: `
+          animate__animated
+          animate__fadeOutDown
+          animate__faster
+        `
+      }
+    });
+    setCheckingPwd(1);
+  }
+
+  const checkNickname = () => {
+    axios.get('http://localhost:8090/user/nickname',
+      {
+        params: {
+          email: email
+        }
+      })
+      .then(response => {
+        const userList = response.data; // 응답 데이터 전체를 가져옵니다.
+        if (!userList) {
+          console.error('User list is undefined or null');
+          return;
+        }
+
+        const nicknames = userList.map(user => user.nickname);
+        if (nicknames.includes(nickname)) {
+          Swal.fire({
+            text: "닉네임이 중복됩니다.",
+            icon: "warning"
+          });
+          return;
+        }
+        Swal.fire({
+          icon: "success",
+          text: "닉네임 사용 가능합니다!",
+        });
+        setCheckingNickname(1);
+        return;
+      }).catch(error => {
+        console.error('Error fetching nicknames:', error);
+      });
+  }
+  const checkTel = () => {
+    axios.get('http://localhost:8090/user/tel', {
+      params: {
+        email: email
+      }
+    })
+      .then(response => {
+        const userList = response.data; // 응답 데이터 전체를 가져옵니다.
+        if (!userList) {
+          console.error('User list is undefined or null');
+          return;
+        }
+
+        const tels = userList.map(user => user.tel);
+        if (tels.includes(tel)) {
+          Swal.fire({
+            text: "전화번호가 중복됩니다.",
+            icon: "warning"
+          });
+          return;
+        }
+        Swal.fire({
+          icon: "success",
+          text: "전화번호 사용 가능합니다!",
+        });
+        setCheckingTel(1);
+        return;
+      }).catch(error => {
+        console.error('Error fetching tels:', error);
+      });
+  }
+
+
   const handleResetClick = () => {
     setPreview(null);
     setImage(null);
-    setChange(0);
   };
+
+
+  const goBack = () => {
+    navigate('/');
+  }
+
+  const deactiveAccount = () => {
+    setStatus(status === 0 ? 1 : 0)
+  }
+
+  const handleImageEdit = () => {
+    // "사진수정" 버튼 클릭 시 input[type='file'] 트리거
+    document.getElementById('hidden-input').click();
+  };
+
 
   return (
     <>
-      {/* 전체 스타일 */}
-      <div style={{
-        display: 'flex',
-        justifyContent: 'center',
-        padding: '4%',
+      <Box sx={{
+        display: 'flex', justifyContent: 'center',
+        width: '80%',
+        border: '0px solid rgb(92, 22, 153)'
       }}>
+        <Card sx={{
+          mt: 5,
+          boxShadow: 'none', width: '70%',
+        }}>
+          <Typography variant="h6"
+            sx={{
+              mt: 2, mb: 2,
+              fontWeight: 'bold',
+              color: 'rgb(92, 22, 153)',
+              margin: '0px 0px 0px 15px',
+            }}>프로필 편집</Typography>
 
-        {/* 메인 프로필 영역 */}
-        <Card className="MainProfile">
+          <Box sx={{ m: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            {/* 프로필 사진, 닉네임, 편집 버튼 */}
+            <Box
+              sx={{
+                display: 'flex',
+                alignItems: 'center',
+                width: '100%',
+                backgroundColor: '#4b008225',
+                borderRadius: '15px',
+                padding: '0.75em 0.25em',
+              }}>
 
-          {/* 프로필 사진, 닉네임, 편집 영역 */}
-          <div className="profile">
-            {/* 기본 설정된 프사가 없으면 나오는 부분 */}
-            { !profile && <Avatar alt="H" src="/img/profile/profile1.jpg"
-              style={{ marginLeft: '20px', width: '20%', height: '100%' }} /> }
-            {/* 기본 설정된 프사가 있으면 나오는 부분 */}
-            { profile && <AdvancedImage 
-            cldImg={myimage} style={{width: '100px', height: '100px', borderRadius: '50%'}} /> } 
-            <p className="nickname">닉네임</p>
-            <Button className="profile-edit-button"
-              onClick={openModal}>프로필 편집</Button>
-          </div>
+              <Avatar
+                alt="H"
+                src="/img/profile/profile1.jpg"
+                sx={{
+                  width: 80, height: 80, ml: 3, mr: 2, cursor: 'pointer'
+                }}
+                onClick={handleImageEdit}
 
-          {/* 소개 영역 */}
-          <div id="introduce" style={{ margin: '10px 0' }}>
-            <p className="introduce-label">소개</p>
-          </div>
+              />
+              <input
+                type="file"
+                onChange={handleImageChange}
+                accept="image/*"
+                hidden
+                id="hidden-input"
+              />
 
-          {/* 소개글 수정 영역 */}
-          <Box component="section" sx={{
-            p: 2,
-            border: 'none',
-            marginTop: '1%',
-            width: '65%',
-          }}>
-            <TextField id="outlined-basic" label="나로 말할거 같으면!" variant="outlined" fullWidth
-            defaultValue={user.statusMessage} onChange={handleStat}/>
-          </Box>
+              <Typography variant="h6"
+                sx={{
+                  flexGrow: 1, fontWeight: 'bold',
+                  display: {
+                    xs: 'none',
+                    md: 'none',
+                    lg: 'flex'
+                  },
+                }}>{nickname}</Typography>
+              <Button
+                variant='contained'
+                onClick={handleImageEdit}
+                style={{
+                  marginRight: '2.5em',
+                  backgroundColor: 'rgb(54, 11, 92)',
 
-          {/* 성별 영역 */}
-          <div id="gender" className="gender-select-area">
-            <p className="gender-label">성별</p>
+                }}>사진수정</Button>
 
-            {/* 성별 선택영역 */}
-            <FormControl fullWidth>
-              <InputLabel id="demo-simple-select-label" style={{ marginLeft: '35px' }}>성별</InputLabel>
-              <Select
-                labelId="demo-simple-select-label"
-                id="demo-simple-select"
-                value={gender}
-                label="성별"
-                onChange={handleChange}
-                style={{ width: '25%', marginLeft: '3%' }}
-              >
-                <MenuItem value={"man"}>남자</MenuItem>
-                <MenuItem value={"girl"}>여자</MenuItem>
-                <MenuItem value={"none"}>설정 안함</MenuItem>
-              </Select>
-            </FormControl>
-          </div>
+            </Box>
 
-          {/* 계정 비활성화(탈퇴) 영역 */}
-          <div id="profile-disabled" className="profile-disabled">
-            <Button sx={{
-              backgroundColor: 'red',
-              color: 'white', '&:hover':
-                { backgroundColor: 'darkred' }
-            }}>계정 비활성화</Button>
-          </div>
+            <br />
 
-          {/* 프로필 편집 - 모달 영역 */}
-          <Modal
-            open={isModalOpen}
-            onClose={closeModal}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-          >
+            {/* 프로필 편집 폼 */}
+            <TextField
+              fullWidth
+              label="이메일"
+              variant="outlined"
+              value={email || ''}
+              disabled
+              sx={{ mt: 2, width: '100%' }}
+            />
+            <br />
+            {/* 소개 영역 */}
+            <TextField
+              fullWidth
+              label="상태 메시지를 수정하세요"
+              variant="outlined"
+              value={statusMessage || ''}
+              onChange={handleStat}
+              sx={{ width: '100%' }}
+            />
 
-            <div className="modal-content">
-              <h2 id="modal-modal-title">프로필 편집</h2>
-              <p id="modal-modal-description" className="another-label"
-                style={{ width: '100%', marginLeft: '2px', marginBottom: '10px', }}>개인정보 수정</p>
-
-              {/* 프로필 편집 폼 */}
-              <TextField
-                className="email-text"
-                id="standard-basic"
-                label="이메일"
-                variant="standard"
-                defaultValue={user.email}
-                disabled
-                fullWidth
-              /><br /><br />
-
-              <div>
-                <input
-                  id="hidden-input"
-                  type="file"
-                  className="hidden"
-                  onChange={handleImageChange}
-                  accept="image/*"
-                  hidden
-                />
-                <label htmlFor="hidden-input">
-                  <div>
-                    Upload a file
-                  </div>
-                </label>
-                <div>
-                  {/* 이미지를 선택하면 프리뷰 이미지만 나오게 하기 */}
-                  {(preview) && <img src={preview} alt="preview" className="w-full"
-                  style={{width: '100px', height:'100px', borderRadius: '50%'}} /> }
-                  {/* 이미지를 선택하지 않으면 기존 프로필 이미지가 나오게 하기 */}
-                  {(profile && !preview) && <AdvancedImage 
-                  cldImg={myimage} style={{width: '100px', height: '100px', borderRadius: '50%'}} /> }
-                </div>
-              </div>
-
-              <div>
-                {/* <button
-                  onClick={uploadImage}
-                  disabled={!image}
+            {/* 성별 선택 영역 */}
+            <Box sx={{ alignSelf: 'flex-start', mt: 2, mb: 2, width: '100%' }}>
+              <FormControl fullWidth>
+                <InputLabel>성별</InputLabel>
+                <Select
+                  value={gender === 0 ? 'man' : (gender === 1 ? 'woman' : 'none')}
+                  label="성별"
+                  onChange={handleGender}
                 >
-                  Upload now
-                </button> */}
-                <button
-                  onClick={handleResetClick}
-                  disabled={!image}
-                >
-                  Reset
-                </button>
-              </div>
-              <br /><br />
+                  <MenuItem value={"man"}>남자</MenuItem>
+                  <MenuItem value={"woman"}>여자</MenuItem>
+                  <MenuItem value={"none"}>설정 안함</MenuItem>
+                </Select>
+              </FormControl>
+            </Box>
 
-              <TextField
-                id="standard-basic"
-                label="이름"
-                variant="standard"
-                defaultValue={user.uname}
-                onChange={handleUname}
-                fullWidth  // 입력 폼 너비를 전체로 설정
-              /><br /><br />
 
+            {/* 기타 폼 요소 */}
+            {/* 이름 입력 */}
+            <TextField
+              required
+              fullWidth
+              label="이름"
+              variant="standard"
+              value={uname || ''}
+              onChange={handleUname}
+              sx={{ mt: 2, width: '100%' }}
+            />
+
+            {/* 닉네임 입력 */}
+            <Grid container style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+              <Grid item xs={8} md={10} lg={10.8}>
+                <LightTooltip 
+                title="별명을 입력하세요." arrow placement="bottom" >
+                  <TextField
+                    required
+                    fullWidth
+                    label="닉네임"
+                    variant="standard"
+                    value={nickname || ''}
+                    onChange={handleNickname}
+                    sx={{ mt: 2, width: '100%' }}
+                  />
+                </LightTooltip>
+              </Grid>
+              <Grid item xs={4} md={2} lg={1.2}>
+                <Button onClick={checkNickname} variant="contained" sx={{ backgroundColor: 'rgb(54, 11, 92)', width:'10%' }} style={{ margin: '20px 0px 0px 5px' }} >확인</Button>
+              </Grid>
+            </Grid>
+
+
+            {/* 도메인 입력 */}
+            <TextField
+              fullWidth
+              label="도메인 주소"
+              variant="standard"
+              value={snsDomain || ''}
+              onChange={handleSnsDomain}
+              sx={{ mt: 2, width: '100%' }}
+            />
+
+
+            {/* 전화번호 입력 */}
+            <Grid container style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+            <Grid item xs={8} md={10} lg={10.8}>
+                <LightTooltip title="' - ' 없이 숫자만 입력하세요." placement='bottom' >
+                  <TextField
+                    required
+                    fullWidth
+                    label="전화번호"
+                    variant="standard"
+                    value={tel || ''}
+                    onChange={handleTelChange}
+                    sx={{ mt: 2, width: '100%' }}
+                  />
+                </LightTooltip>
+              </Grid>
+              <Grid item xs={4} md={2} lg={1.2}>
+                <Button onClick={checkTel} variant="contained" sx={{ backgroundColor: 'rgb(54, 11, 92)' }} style={{ margin: '20px 0px 0px 5px' }} >확인</Button>
+              </Grid>
+            </Grid>
+
+
+
+            {/* 비밀번호 입력 */}
+            <LightTooltip title="숫자와 글자, 특수문자 포함 6자리 이상" arrow placement="bottom" >
               <TextField
-                className="nickname-text"
-                id="standard-basic"
-                label="닉네임"
-                variant="standard"
-                defaultValue={user.nickname}
-                onChange={handleNickname}
                 fullWidth
-                /><br /><br />
-
-              <TextField
-                className="pwd-text"
-                id="standard-basic"
-                label="비밀번호"
+                label="비밀번호 입력"
                 variant="standard"
                 type={showPassword ? 'text' : 'password'}
-                fullWidth
+                sx={{ mt: 2, width: '100%' }}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">
-                      <Button
-                        color="inherit"
-                        style={{ width: '10px' }}
+                      <IconButton
+                        aria-label="toggle password visibility"
                         onClick={togglePasswordVisibility}
                         onMouseDown={(event) => event.preventDefault()}
-                        edge="end"
                       >
                         {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
-                      </Button>
+                      </IconButton>
                     </InputAdornment>
-                  ),
+                  )
                 }}
+                onChange={handlePwd1}
               />
-              <div style={{ textAlign: 'right' }}>
-                <Button variant="contained" color="primary"
-                  style={{
-                    width: '30%', marginTop: '1%'
-                  }}>
-                  비밀번호 변경
-                </Button>
-              </div>
+            </LightTooltip>
 
-
-              {/* 그 외 정보에서 도메인 구간 */}
-              <br /><br />
-              <p className="another-label"
-                style={{
-                  width: '100%', marginLeft: '-2px',
-                  marginTop: '10px',
-                  marginBottom: '8px'
-                }}>도메인 수정</p>
-
-              <TextField
-                id="standard-basic"
-                label="도메인"
-                variant="standard"
-                fullWidth
-              /><br /><br /><br />
-
-              {/* 드롭다운 밝은배경/어두운 배경 */}
-              <FormGroup>
-                <p className="another-label"
-                  style={{ width: '100%', marginLeft: '0px', marginBottom: '15px' }}>테마 선택</p>
-                <FormControlLabel
-                  style={{ justifyContent: 'center' }}
-                  control={<MaterialUISwitch sx={{ m: 2 }} defaultChecked />}
-                  label="밝은 테마 / 어두운 테마"
+            {/* 비밀번호 확인 */}
+            <Grid container style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
+            <Grid item xs={8} md={10} lg={10.8}>
+                <TextField
+                  fullWidth
+                  label="비밀번호 확인"
+                  variant="standard"
+                  type={showPassword ? 'text' : 'password'}
+                  sx={{ mt: 2 }}
+                  InputProps={{
+                    endAdornment: (
+                      <InputAdornment position="end">
+                        <IconButton
+                          aria-label="toggle password visibility"
+                          onClick={togglePasswordVisibility}
+                          onMouseDown={(event) => event.preventDefault()}
+                        >
+                          {showPassword ? <VisibilityOffIcon /> : <VisibilityIcon />}
+                        </IconButton>
+                      </InputAdornment>
+                    )
+                  }}
+                  onChange={handlePwd2}
                 />
-                <br /><br />
+              </Grid>
+              <Grid item xs={4} md={2} lg={1.2}>
+                <Button onClick={chectPwd} variant="contained" sx={{ backgroundColor: 'rgb(54, 11, 92)' }} style={{ margin: '20px 0px 0px 5px' }} >확인</Button>
+              </Grid>
+            </Grid>
+            <br /><br />
 
-                {/* on/off에 따른 계정 공개/비공개 */}
-                <p className="another-label"
-                  style={{ width: '100%', marginLeft: '0px', marginBottom: '15px' }}
-                >계정 공개 여부</p>
-                <Stack direction="row" spacing={1} justifyContent="center">
-                  <Typography>비공개</Typography>
-                  <AntSwitch defaultChecked inputProps={{ 'aria-label': 'ant design' }} />
-                  <Typography>공개</Typography>
-                </Stack>
+            {/* 생일 변경 */}
+            <LightTooltip title="생년월일을 직접 입력하실 수 있습니다." placement='bottom'>
+              <TextField
+                id="birth"
+                label="생년월일"
+                type="date"
+                value={birth || ''}
+                onChange={handleBirthChange}
+                InputLabelProps={{ shrink: true }}
+                fullWidth
+                style={{ marginBottom: '20px' }}
+              />
+            </LightTooltip>
 
-                <div style={{ textAlign: 'right', marginTop: '5%' }}>
-                  <Button variant="contained" color="primary" onClick={submitProfile}
-                    style={{ width: '35%' }}> 프로필 수정하기
-                  </Button>
-                </div>
-              </FormGroup>
-            </div>
-          </Modal>
+            {/* 하단 버튼 영역 */}
+            <Grid container sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
+              <Grid item xs={8} lg={6} sx={{ display: 'flex' }}>
+                <Button 
+                  variant="contained"
+                  onClick={submitProfile}
+                  style={{ margin: '1em', width: '20%', backgroundColor: 'rgb(54, 11, 92)' }}>
+                  완료
+                </Button>
+
+                <Button
+                  variant="contained"
+                  onClick={goBack}
+                  style={{ margin: '1em', width: '20%', backgroundColor: '#bbbbbb' }}>
+                  취소
+                </Button>
+              </Grid>
+
+              {status == 0 ? 
+              <Grid item xs={4} lg={6} >
+                <Button
+                  variant="contained"
+                  onClick={deactiveAccount}
+                  style={{ margin: '1em', width: '15%', backgroundColor: 'red' }}>
+                  계정<br />잠그기
+                </Button>
+                </Grid>
+                :
+                <Grid item xs={4} lg={6} >
+                <Button
+                  variant="contained"
+                  onClick={deactiveAccount}
+                  style={{ margin: '1em', width: '15%', backgroundColor: 'Blue' }}>
+                  활성화
+                </Button>
+                </Grid>}
+            </Grid>
+
+          </Box>
+
         </Card>
-      </div>
+      </Box >
     </>
   );
+
 }
