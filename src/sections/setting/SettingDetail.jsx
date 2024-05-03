@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import {
   Box, Button, Card, TextField, InputAdornment,
   Typography, InputLabel, MenuItem, FormControl, Select, Avatar,
-  IconButton,
-  Grid
+  IconButton, Grid,
+  Stack
 } from "@mui/material";
 // import { Cloudinary } from "@cloudinary/url-gen/index";
 import { FindImage, UploadImage } from "../../api/image.js";
@@ -26,6 +26,13 @@ import Swal from "sweetalert2";
 import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 
+// // 생년월일
+// import dayjs from 'dayjs';
+// import { DemoContainer } from '@mui/x-date-pickers/internals/demo';
+// import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+// import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+// import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+
 const LightTooltip = styled(({ className, ...props }) => (
   <Tooltip arrow {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
@@ -37,7 +44,6 @@ const LightTooltip = styled(({ className, ...props }) => (
 
 export default function SettingDetail() {
   const navigate = useNavigate();
-
 
   const handleImageChange = (event) => {
     const file = event.target.files[0];
@@ -67,9 +73,10 @@ export default function SettingDetail() {
   const [statusMessage, setStat] = useState('');
   const [profile, setProfile] = useState('');
   const [image, setImage] = useState('');
-  const [birth, setBirth] = useState(new Date());
   const [tel, setTel] = useState('');
   const [snsDomain, setSnsDomain] = useState('');
+
+  const [birth, setBirth] = useState('');
 
   const [pwd1, setPwd1] = useState('');
   const [pwd2, setPwd2] = useState('');
@@ -80,16 +87,13 @@ export default function SettingDetail() {
   const [status, setStatus] = useState('0');
   const [preview, setPreview] = useState('');
 
-
   const [change, setChange] = useState(0);
   const [myimage, setMyimage] = useState('');
 
-  // 성별
   const [gender, setGender] = useState('');
 
   useEffect(() => {
     if (uid == null) {
-      //alert('로그인이 필요합니다.');
       navigate('/login');
     }
   }, []);
@@ -110,7 +114,6 @@ export default function SettingDetail() {
     } else {
       formattedTel = input;
     }
-
     setTel(formattedTel);
   };
 
@@ -121,48 +124,39 @@ export default function SettingDetail() {
           uid: uid,
         }
       }).then(res => {
-        setUser(res.data);
-        setUname(res.data.uname);
-        setNickname(res.data.nickname);
-        setStat(res.data.statusMessage);
         if (res.data.profile != null) {
           setProfile(res.data.profile);
           setMyimage(FindImage(res.data.profile));
         }
+        setUser(res.data);
+        setUname(res.data.uname);
+        setNickname(res.data.nickname);
+        setStat(res.data.statusMessage);
         setBirth(res.data.birth);
         setTel(res.data.tel);
         setSnsDomain(res.data.snsDomain);
       }).catch(error => console.log(error));
     }
-  }, [])
+
+  }
+    , [])
 
 
   // 비밀번호 숨기기/보이기
   const [showPassword, setShowPassword] = useState(false);
   // 비밀번호 숨기기/보이기 토글
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
+  const togglePasswordVisibility = () => { setShowPassword(!showPassword); };
 
-
-  // const handlePasswordChange = () => {
-  //     // 변경 확인 버튼 클릭 시 실행될 로직
-  //     console.log('비밀번호 변경 확인');
-  // };
-  // 설정 변경
   const handleStat = (e) => { setStat(e.target.value); };
   const handleGender = (event) => { setGender(event.target.value === 'man' ? 0 : (event.target.value === 'woman' ? 1 : 2)); };
 
   const handleUname = (e) => { setUname(e.target.value); };
   const handleNickname = (e) => { setNickname(e.target.value); };
   const handleSnsDomain = (e) => { setSnsDomain(e.target.value); };
-  const handleTel = (e) => { setTel(e.target.value); };
+  // const handleBirth = (e) => { setBirth(dayjs(e.target.value)); };
 
   const handlePwd1 = (e) => { setPwd1(e.target.value); };
   const handlePwd2 = (e) => { setPwd2(e.target.value); };
-
-  const handleBirthChange = (e) => { setBirth(e.target.value); };
-
 
   const submitProfile = async () => {
     if (checkingNickName === 0) {
@@ -186,6 +180,7 @@ export default function SettingDetail() {
       });
       return;
     }
+    console.log("asd" + birth)
     if (change !== 1) {
       axios.post('http://localhost:8090/user/update', {
         pwd: pwd1,
@@ -239,10 +234,7 @@ export default function SettingDetail() {
       }
     });
     navigate('/setting');
-  };
-
-
-  
+  }
 
   const chectPwd = async e => {
     e.preventDefault();
@@ -484,10 +476,27 @@ export default function SettingDetail() {
                   <MenuItem value={"none"}>설정 안함</MenuItem>
                 </Select>
               </FormControl>
+              <br /><br />
+              {/* 생일 변경
+              <LightTooltip title="생년월일을 직접 입력하실 수 있습니다." placement='bottom'>
+                <TextField
+                  fullWidth
+                  label="생년월일"
+                  type='date'
+                  value={birth || ''}
+                  onChange={handleBirth}
+                  sx={{ mt: 2, width: '100%' }}
+                  inputProps={{ maxLength: 4 }} // 최대 길이 설정
+                />
+                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                  <DemoContainer components={['DatePicker']}>
+                    <DatePicker sx={{ mt: 2, width: '100%' }} label="생년월일" onChange={handleBirth} slots={{ textField: TextField }} 
+                    value={dayjs(birth)} formatDensity="spacious" />
+                  </DemoContainer>
+                </LocalizationProvider>
+              </LightTooltip> */}
             </Box>
 
-
-            {/* 기타 폼 요소 */}
             {/* 이름 입력 */}
             <TextField
               required
@@ -502,8 +511,8 @@ export default function SettingDetail() {
             {/* 닉네임 입력 */}
             <Grid container style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
               <Grid item xs={8} md={10} lg={10.8}>
-                <LightTooltip 
-                title="별명을 입력하세요." arrow placement="bottom" >
+                <LightTooltip
+                  title="별명을 입력하세요." arrow placement="bottom" >
                   <TextField
                     required
                     fullWidth
@@ -516,7 +525,7 @@ export default function SettingDetail() {
                 </LightTooltip>
               </Grid>
               <Grid item xs={4} md={2} lg={1.2}>
-                <Button onClick={checkNickname} variant="contained" sx={{ backgroundColor: 'rgb(54, 11, 92)', width:'10%' }} style={{ margin: '20px 0px 0px 5px' }} >확인</Button>
+                <Button onClick={checkNickname} variant="contained" sx={{ backgroundColor: 'rgb(54, 11, 92)', width: '10%' }} style={{ margin: '20px 0px 0px 5px' }} >확인</Button>
               </Grid>
             </Grid>
 
@@ -534,7 +543,7 @@ export default function SettingDetail() {
 
             {/* 전화번호 입력 */}
             <Grid container style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-            <Grid item xs={8} md={10} lg={10.8}>
+              <Grid item xs={8} md={10} lg={10.8}>
                 <LightTooltip title="' - ' 없이 숫자만 입력하세요." placement='bottom' >
                   <TextField
                     required
@@ -581,7 +590,7 @@ export default function SettingDetail() {
 
             {/* 비밀번호 확인 */}
             <Grid container style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'center' }}>
-            <Grid item xs={8} md={10} lg={10.8}>
+              <Grid item xs={8} md={10} lg={10.8}>
                 <TextField
                   fullWidth
                   label="비밀번호 확인"
@@ -608,26 +617,12 @@ export default function SettingDetail() {
                 <Button onClick={chectPwd} variant="contained" sx={{ backgroundColor: 'rgb(54, 11, 92)' }} style={{ margin: '20px 0px 0px 5px' }} >확인</Button>
               </Grid>
             </Grid>
-            <br /><br />
 
-            {/* 생일 변경 */}
-            <LightTooltip title="생년월일을 직접 입력하실 수 있습니다." placement='bottom'>
-              <TextField
-                id="birth"
-                label="생년월일"
-                type="date"
-                value={birth || ''}
-                onChange={handleBirthChange}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
-                style={{ marginBottom: '20px' }}
-              />
-            </LightTooltip>
 
             {/* 하단 버튼 영역 */}
             <Grid container sx={{ display: 'flex', justifyContent: 'space-between', width: '100%' }}>
               <Grid item xs={8} lg={6} sx={{ display: 'flex' }}>
-                <Button 
+                <Button
                   variant="contained"
                   onClick={submitProfile}
                   style={{ margin: '1em', width: '20%', backgroundColor: 'rgb(54, 11, 92)' }}>
@@ -642,29 +637,29 @@ export default function SettingDetail() {
                 </Button>
               </Grid>
 
-              {status == 0 ? 
-              <Grid item xs={4} lg={6} >
-                <Button
-                  variant="contained"
-                  onClick={deactiveAccount}
-                  style={{ margin: '1em', width: '15%', backgroundColor: 'red' }}>
-                  계정<br />잠그기
-                </Button>
+              {status == 0 ?
+                <Grid item xs={4} lg={6} >
+                  <Button
+                    variant="contained"
+                    onClick={deactiveAccount}
+                    style={{ margin: '1em', width: '15%', backgroundColor: 'red' }}>
+                    계정<br />잠그기
+                  </Button>
                 </Grid>
                 :
                 <Grid item xs={4} lg={6} >
-                <Button
-                  variant="contained"
-                  onClick={deactiveAccount}
-                  style={{ margin: '1em', width: '15%', backgroundColor: 'Blue' }}>
-                  활성화
-                </Button>
+                  <Button
+                    variant="contained"
+                    onClick={deactiveAccount}
+                    style={{ margin: '1em', width: '15%', backgroundColor: 'Blue' }}>
+                    활성화
+                  </Button>
                 </Grid>}
             </Grid>
 
           </Box>
 
-        </Card>
+        </Card >
       </Box >
     </>
   );
