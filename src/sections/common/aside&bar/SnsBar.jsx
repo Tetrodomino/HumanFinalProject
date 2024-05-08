@@ -1,7 +1,7 @@
 // 기본
 import { React, useEffect, useState } from 'react';
 import { useLocation, useNavigate } from "react-router-dom";
-import { AppBar, Box, Grid, Button, Modal, TextField, Toolbar } from '@mui/material';
+import { AppBar, Box, Grid, Button, Modal, TextField, Toolbar, Avatar } from '@mui/material';
 
 // 아이콘
 import SearchIcon from '@mui/icons-material/Search';
@@ -27,8 +27,9 @@ const firebaseConfig = {
 
 export default function SnsBar() {
 
-  const uid = parseInt(GetWithExpiry("uid"));
+  // const uid = parseInt(GetWithExpiry("uid"));
   const email = GetWithExpiry("email");
+  const profile = GetWithExpiry("profile");
   const location = useLocation();
 
   // 반응형 로고 변환
@@ -45,18 +46,15 @@ export default function SnsBar() {
   const navigate = useNavigate();
   const HomeButton = () => { navigate('/'); };
   const handleSearch = () => {
-    if (searchtext == '' || searchtext == null)
-    {
+    if (searchtext === '' || searchtext === null) {
       alert('검색어를 입력하십시오');
     }
     else {
       sessionStorage.setItem("search", searchtext);
-      if (location.pathname != 'search')
-      {
+      if (location.pathname !== 'search') {
         navigate('/search');
       }
-      else
-      {
+      else {
         window.location.replace('/search');
       }
     }
@@ -70,6 +68,7 @@ export default function SnsBar() {
   const auth = getAuth();
 
   // firebase 로그인 구현
+  // eslint-disable-next-line 
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -96,10 +95,13 @@ export default function SnsBar() {
   const handleSearchText = (e) => {
     setSearchtext(e.target.value);
   }
+  const handleErase = () => {
+    setSearchtext('');
+  }
 
   return (
     <div style={{ marginBottom: '6%' }} >
-      <AppBar position="absolute" sx={{ background: 'linear-gradient(to right, #7B68EE, rgb(28, 0, 53))', boxShadow: 'none' }}>
+      <AppBar position="absolute" sx={{ background: 'rgb(58, 0, 85)', boxShadow: 'none' }}>
         <Toolbar>
 
           <Grid container spacing={1}>
@@ -114,19 +116,19 @@ export default function SnsBar() {
               <img src={logoImageXs} alt='LOGO' style={{ width: '20px', alignItems: 'center', cursor: 'pointer' }} onClick={HomeButton} />
             </Grid>
 
-            <Grid item xs={3} lg={1.8}>
+            <Grid item xs={3} lg={0.8}>
             </Grid>
 
             {/* 검색창 부분 */}
-            <Grid item xs={2} lg={5.5} sx={{ placeItems: 'center', display: 'flex', justifyContent: 'center' }}>
+            <Grid item xs={2} lg={6.3} sx={{ placeItems: 'center', display: 'flex', justifyContent: 'center' }}>
               <Search sx={{ borderRadius: 50, display: { xs: 'flex', lg: 'none' }, alignItems: 'center', justifyContent: 'center' }}  >
                 <Button sx={{ cursor: 'pointer' }} onClick={handleOpen}>
-                  <SearchIcon sx={{ color: 'white' }}/>
+                  <SearchIcon sx={{ color: 'white' }} />
                 </Button>
                 <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description"
                   sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <Box sx={{ display: 'flex' }} className='search_modal'>
+                  <Box sx={{ display: 'flex', width: '100%' }} >
                     <Grid container>
                       <Grid item xs={8}>
                         <TextField
@@ -134,7 +136,7 @@ export default function SnsBar() {
                           label="검색"
                           variant="standard"
                           onChange={handleSearchText}
-                          defaultValue={searchtext}
+                          value={searchtext}
                         />
                       </Grid>
                       <Grid item xs={2}>
@@ -148,16 +150,13 @@ export default function SnsBar() {
                 </Modal>
               </Search>
               <Search sx={{ borderRadius: 50, display: { xs: 'none', lg: 'flex' } }}  >
-                <SearchIconWrapper sx={{ cursor: 'pointer' }} onClick={handleSearch} >
-                  <SearchIcon  />
-                </SearchIconWrapper>
                 <StyledInputBase
                   placeholder="검색"
                   inputProps={{ 'aria-label': 'search' }}
                   onChange={handleSearchText}
-                  defaultValue={searchtext}
+                  value={searchtext}
                 />
-                <Button sx={{ cursor: 'pointer' }} onClick={handleClose}><CloseIcon sx={{ color: 'white' }} /></Button>
+                {searchtext ? <Button sx={{ cursor: 'pointer' }} onClick={handleErase}><CloseIcon sx={{ color: 'white' }} /></Button> : <></>}
                 <Button sx={{ cursor: 'pointer' }} onClick={handleSearch}><SearchIcon sx={{ color: 'white' }} /></Button>
               </Search>
             </Grid>
@@ -169,6 +168,10 @@ export default function SnsBar() {
             <Grid item xs={2.5} lg={2} sx={{ placeItems: 'center', justifyContent: 'flex-end', display: 'flex' }}>
               {email ? (
                 <>
+                    <Avatar
+                      sx={{backgroundColor:'white', marginRight:'.5rem'}}
+                      src={`https://res.cloudinary.com/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload/${profile}`}
+                     />                                          
                   <span>{email.split('@')[0]}</span>
                   <Button style={{ color: 'white', opacity: 0.7 }} onClick={handleLogout}>로그아웃</Button>
                 </>

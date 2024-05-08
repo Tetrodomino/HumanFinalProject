@@ -26,7 +26,7 @@ export function GetWithExpiry(key) {
 
     if (now.getTime() > parseInt(item.expiry)) {
         localStorage.removeItem(key)
-        if (key == 'uid' || key == 'email')
+        if (key === 'uid' || key === 'email')
         {
             alert('세션이 만료되었습니다. 로그인이 필요합니다')
             navigate('/login')

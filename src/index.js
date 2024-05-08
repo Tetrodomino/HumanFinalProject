@@ -1,5 +1,5 @@
 import React from 'react';
-import ReactDOM from 'react-dom/client';
+import { createRoot } from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import reportWebVitals from './reportWebVitals';
 import App from './App';
@@ -13,14 +13,10 @@ import Mypage from './sections/profile/Profile/Mypage';
 import Profile from './sections/profile/Profile/Profile';
 import Setting from './sections/setting/Setting/Setting';
 import Search from './sections/search/Search/Search';
-import React_to_Spring from './sections/React_to_Spring';
-import Cloudinary2 from './sections/sign/Cloudinary';
-import ImageUpload from './sections/sign/ImageUpload';
-
-// 템플릿
+import ChangePwd from './sections/setting/ChangePassword';
 
 
-
+// Create browser router
 const router = createBrowserRouter([
   {
     path: '/',
@@ -36,21 +32,21 @@ const router = createBrowserRouter([
       { path: 'profile', element: <Profile /> },
       { path: 'setting', element: <Setting /> },
       { path: 'search', element: <Search /> },
-      { path: 'test', element: <React_to_Spring /> },
-      { path: 'cloudinary', element: <Cloudinary2 /> },
-      { path: 'image', element: <ImageUpload /> },
+      { path: 'profile/changePwd', element: <ChangePwd /> },
+      { path: 'board/:url', element: <Home /> },
+      
     ]
   }
 ]);
 
-const root = ReactDOM.createRoot(document.getElementById('root'));
+// Render the app
+const root = createRoot(document.getElementById('root'));
+
 root.render(
   <React.StrictMode>
     <RouterProvider router={router} />
   </React.StrictMode>
 );
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
+// Performance measurement
 reportWebVitals();
