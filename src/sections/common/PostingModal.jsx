@@ -17,6 +17,7 @@ import CreateIcon from '@mui/icons-material/Create';
 import './posting.css';
 import { AntSwitch } from './postingStyle.jsx';
 import { UploadImage } from "../../api/image.js";
+import { useGetUserNicknameLS } from '../../api/customHook.jsx';
 // import { FindImage, UploadImage2 } from "../../api/image.js";
 import { GetWithExpiry } from "../../api/LocalStorage.js";
 
@@ -30,25 +31,7 @@ export default function Posting() {
     if (!uid) {
         navigate("/login");
     }
-    const [nickname, setNickname] = useState('');
-
-    useEffect(() => {
-        if (uid !== null) {
-            axios.get('http://localhost:8090/user/getUser', {
-                params: {
-                    uid: uid,
-                }
-            }).then(res => {
-                if (res.data.nickname !== null && res.data.nickname !== '') {
-                    setNickname(res.data.nickname);
-                }
-                else {
-                    setNickname(res.data.email);
-                }
-            }).catch(error => console.log(error));
-        }
-    }, [uid]); // 종속성 배열에서 uid 제거
-    
+    const nickname = useGetUserNicknameLS();
 
     // 창열고 닫기
     const [open, setOpen] = useState(false);

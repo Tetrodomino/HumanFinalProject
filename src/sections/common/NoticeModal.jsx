@@ -1,18 +1,93 @@
 // 기본
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Box, Modal, List, ListItem, Divider, ListItemText, ListItemAvatar, Avatar, Typography, Badge, Grid } from '@mui/material';
 
 // 아이콘
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 
+import * as StompJs from "@stomp/stompjs";
+import * as SockJS from "sockjs-client";
+
 // css 연결
 import './notice.css';
+import { GetWithExpiry } from '../../api/LocalStorage';
+import axios from 'axios';
 
 export default function NoticeModal() {
   const [open, setOpen] = React.useState(false);
-  const handleOpen = () => setOpen(true);
-  const handleClose = () => setOpen(false);
+  const handleOpen = () => {
+    if (uid != null && !isNaN(uid))
+    {
+      publish();
+    }
+    setOpen(true);
+  };
+  const handleClose = () => {
+    setOpen(false)
+    setNotice([]);
+  };
+
+  const client = useRef({});
+  const [notice, setNotice] = useState([]);
+
+  const uid = GetWithExpiry("uid");
+
+  useEffect(() => {
+    if (uid != null && !isNaN(uid))
+    {
+      connect();
+    
+      return () => disconnect();
+    }
+  }, [])
+
+  const connect = () => {
+    client.current = new StompJs.Client({
+      webSocketFactory: () => new SockJS("/ws-stomp"), // proxy를 통한 접속
+      connectHeaders: {
+        "auth-token": "spring-chat-auth-token",
+      },
+      debug: function (str) {
+        console.log(str);
+      },
+      reconnectDelay: 5000,
+      heartbeatIncoming: 4000,
+      heartbeatOutgoing: 4000,
+      onConnect: () => {
+        subscribe();
+      },
+      onStompError: (frame) => {
+        console.error(frame);
+      },
+    });
+
+    client.current.activate();
+  };
+
+  const disconnect = () => {
+    client.current.deactivate();
+  };
+
+  const subscribe = () => {
+    client.current.subscribe(`/sub/notice/${uid}`, ({ body }) => {
+      setNotice(JSON.parse(body));
+      console.log(body);
+    });
+  };
+
+  const publish = () => {
+    if (!client.current.connected) {
+      return;
+    }
+
+    client.current.publish({
+      destination: "/pub/notice",
+      body: uid,
+      //body: JSON.stringify({ uid: uid }),
+    });
+  };
+
   return (
     <div>
       {/* Aside에 표시될 알림부분 표현 */}
@@ -41,6 +116,13 @@ export default function NoticeModal() {
             </Badge>
           </Typography>
           <hr />
+          {notice.map((not, idx) => (
+            <div key={idx}>
+              {not.nid} <br />
+              {not.uid} <br />
+              {not.nContents} <br />
+            </div>
+          ))}
           {/* List로 알림 목록 표현 */}
           <List sx={{ width: '100%', Width: 500 }}>
             <ListItem alignItems="flex-start">

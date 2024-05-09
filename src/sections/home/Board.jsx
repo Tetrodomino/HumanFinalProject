@@ -116,6 +116,24 @@ export default function Board() {
       [index]: !prev[index],
     }));
   };
+
+  function handleButtonLike2(bid, uid2) {
+
+    var sendData = JSON.stringify({
+      uid: uid,
+      fuid: uid2,
+      oid: bid,
+    })
+
+    axios({
+      method: "POST",
+      url: 'http://localhost:8090/board/like',
+      data: sendData,
+      headers: { 'Content-Type': 'application/json' }
+    }).catch(error => console.log(error));
+
+    setUpdate(true);
+  }
   
   return (
     <>
@@ -178,7 +196,7 @@ export default function Board() {
           </CardContent>
           <CardActions disableSpacing>
             {/* 게시글 하단 버튼 - 좋아요 / 게시글 */}
-            <Button >
+            <Button onClick={() => handleButtonLike2(data.bid, data.uid)}>
               <FavoriteIcon />{data.likeCount}
             </Button>
             <Button onClick={() => handleOpen(data.bid)}>
@@ -246,8 +264,8 @@ export default function Board() {
             <Box sx={{ width: '40%', display: 'flex', flexDirection: 'column', height: '100%' }}>
               <Stack direction="column" sx={{ flex: '1.4', padding: 1, overflowY: 'auto' }}>
                 <Stack direction="column" alignItems="center" sx={{ width: "100%", overflowX: 'hidden' }}>
-                  {replyList.map((data, index) => (
-                    <List key={data} sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', paddingRight: 3 }}>
+                  {replyList.map((data, idx) => (
+                    <List key={idx} sx={{ width: '100%', maxWidth: 360, bgcolor: 'background.paper', paddingRight: 3 }}>
                       <ListItem sx={{ display: 'flex', alignItems: 'center' }}>
                         <ListItemAvatar>
                           <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
@@ -257,12 +275,12 @@ export default function Board() {
                         </Typography>
                       </ListItem>
                       <Typography variant="body2" color="text.secondary" sx={{ padding: 2, overflowWrap: 'break-word', }}>
-                        {expandedContents[index] ? data.rContents : data.rContents.slice(0, 30)}
-                        {data.rContents.length > 100 && !expandedContents[index] && (
-                          <button className='replyOpen' onClick={() => toggleExpand(index)}>...더보기</button>
+                        {data.rContents && (expandedContents[idx] ? data.rContents : data.rContents.slice(0, 30))}
+                        {data.rContents && data.rContents.length > 100 && !expandedContents[idx] && (
+                          <button className='replyOpen' onClick={() => toggleExpand(idx)}>...더보기</button>
                         )}
-                        {expandedContents[index] && (
-                          <button className='replyClose' onClick={() => toggleExpand(index)}>접기</button>
+                        {expandedContents[idx] && (
+                          <button className='replyClose' onClick={() => toggleExpand(idx)}>접기</button>
                         )}
                       </Typography>
                       <hr />
