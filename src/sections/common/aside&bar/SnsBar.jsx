@@ -150,12 +150,14 @@ export default function SnsBar() {
                 </Modal>
               </Search>
               <Search sx={{ borderRadius: 50, display: { xs: 'none', lg: 'flex' } }}  >
+                {/* /////////////////////// 5. 10 수정된 부분 : searchtext → searchtext || '' //////////////////////////// */}
                 <StyledInputBase
                   placeholder="검색"
                   inputProps={{ 'aria-label': 'search' }}
                   onChange={handleSearchText}
-                  value={searchtext}
-                />
+                  value={searchtext || ''}
+                  />
+                {/* ////////////////////////////////////////////////////////////////////////////////////////////////// */}
                 {searchtext ? <Button sx={{ cursor: 'pointer' }} onClick={handleErase}><CloseIcon sx={{ color: 'white' }} /></Button> : <></>}
                 <Button sx={{ cursor: 'pointer' }} onClick={handleSearch}><SearchIcon sx={{ color: 'white' }} /></Button>
               </Search>

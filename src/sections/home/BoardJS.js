@@ -1,15 +1,18 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { GetWithExpiry } from "../../api/LocalStorage";
 
-export function useGetBoardList(count, update) {
+
+export function useGetBoardList(count, update, uid) {
     const [dataList, setDataList] = useState([]);
-
+    
     useEffect(() => {
         if (count > 0)
         {
             axios.get('http://localhost:8090/board/list', {
                 params: {
                   c: count,
+                  uid: uid,
                 }
             }).then(res => {
                 const formData = res.data.map(item => ({
@@ -21,6 +24,8 @@ export function useGetBoardList(count, update) {
                     replyCount: item.replyCount,
                     uid: item.uid,
                     bid: item.bid,
+                    liked: item.liked,
+                    profile: item.profile,
                 }));
                 setDataList(formData);
             })
@@ -33,7 +38,7 @@ export function useGetBoardList(count, update) {
     return dataList;
 }
 
-export function useGetBoard(bid: int, open: Boolean, update: Boolean) {
+export function useGetBoard(bid: int, open: Boolean, update: Boolean, uid: int) {
     const [board, setBoard] = useState({});
 
     useEffect(() => {
@@ -41,7 +46,8 @@ export function useGetBoard(bid: int, open: Boolean, update: Boolean) {
         {
             axios.get('http://localhost:8090/board/getBoard', {
                 params: {
-                  bid: bid
+                  bid: bid,
+                  uid: uid,
                 }
             }).then(res => {
                 const formData = {
@@ -53,6 +59,8 @@ export function useGetBoard(bid: int, open: Boolean, update: Boolean) {
                     replyCount: res.data.replyCount,
                     uid: res.data.uid,
                     bid: res.data.bid,
+                    liked: res.data.liked,
+                    profile: res.data.profile,
                 }
                 setBoard(formData);
             }).catch(error => console.log(error));
@@ -63,7 +71,7 @@ export function useGetBoard(bid: int, open: Boolean, update: Boolean) {
     return board;
 }
 
-export function useGetReplyList(bid: int, open: Boolean, update: Boolean, count: int) {
+export function useGetReplyList(bid: int, open: Boolean, update: Boolean, count: int, uid: int) {
     const [replyList, setReplyList] = useState([]);
 
     useEffect(() => {
@@ -94,7 +102,7 @@ export function useGetReplyList(bid: int, open: Boolean, update: Boolean, count:
     return replyList;
 }
 
-export function useGetBoardByUrl(url: String) {
+export function useGetBoardByUrl(url: String, uid: int) {
     const [board, setBoard] = useState({});
 
     useEffect(() => {
@@ -102,7 +110,8 @@ export function useGetBoardByUrl(url: String) {
         {
             axios.get('http://localhost:8090/board/getBoardUrl', {
                 params: {
-                    url: url
+                    url: url,
+                    uid: uid,
                 }
             }).then(res => {
                 const formData = {
@@ -114,6 +123,8 @@ export function useGetBoardByUrl(url: String) {
                     replyCount: res.data.replyCount,
                     uid: res.data.uid,
                     bid: res.data.bid,
+                    liked: res.data.liked,
+                    profile: res.data.profile,
                 }
                 setBoard(formData);
             }).catch(error => console.log(error));

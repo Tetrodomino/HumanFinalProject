@@ -37,6 +37,14 @@ export default function NoticeModal() {
     if (uid != null && !isNaN(uid))
     {
       connect();
+
+      axios.get('http://localhost:8090/notice/list', {
+        params: {
+          uid: uid,
+        }
+      }).then(res => {
+        setNotice(res.data);
+      }).catch(error => console.log(error));
     
       return () => disconnect();
     }
@@ -81,11 +89,11 @@ export default function NoticeModal() {
       return;
     }
 
-    client.current.publish({
-      destination: "/pub/notice",
-      body: uid,
-      //body: JSON.stringify({ uid: uid }),
-    });
+    // client.current.publish({
+    //   destination: "/pub/notice",
+    //   body: uid,
+    //   //body: JSON.stringify({ uid: uid }),
+    // });
   };
 
   return (
@@ -110,20 +118,37 @@ export default function NoticeModal() {
         <Box className='styleBox'>
           <Typography id="modal-modal-title" variant="h6" component="h2" sx={{ margin: 3 }}>
             알림 목록
-            {/* Bedge로 알림 수 표현 */}
             <Badge badgeContent={4} color="primary" sx={{ marginLeft: 5, marginRight: 10 }}>
               <NotificationsActiveIcon color="action" sx={{ marginRight: '8px' }} />
             </Badge>
           </Typography>
           <hr />
-          {notice.map((not, idx) => (
-            <div key={idx}>
-              {not.nid} <br />
-              {not.uid} <br />
-              {not.nContents} <br />
-            </div>
-          ))}
-          {/* List로 알림 목록 표현 */}
+          
+          <Typography sx={{marginLeft: '20px'}}>
+            게시물 알림
+          </Typography>
+          <List sx={{ width: '100%', Width: 500 }}>
+            <ListItem alignItems="flex-start">
+              <ListItemAvatar>
+                <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
+              </ListItemAvatar>
+              <ListItemText
+                primary='팔로잉한 사람이 새로운 게시글을 작성했습니다.'
+                secondary={
+                  <React.Fragment>
+                    <Typography sx={{ display: 'inline', marginRight: 5 }} component="span"
+                      variant="body2" color="text.primary">
+                      게시글 이름
+                    </Typography>
+                    {'댓글 내용'}
+                  </React.Fragment>}
+              />
+            </ListItem>
+          </List>
+          <Divider variant="inset" component="li" />
+          <Typography sx={{marginLeft: '20px'}}>
+            댓글 알림
+          </Typography>
           <List sx={{ width: '100%', Width: 500 }}>
             <ListItem alignItems="flex-start">
               <ListItemAvatar>
@@ -141,7 +166,12 @@ export default function NoticeModal() {
                   </React.Fragment>}
               />
             </ListItem>
-            <Divider variant="inset" component="li" />
+          </List>
+          <Divider variant="inset" component="li" />
+          <Typography sx={{marginLeft: '20px'}}>
+            팔로우 알림
+          </Typography>
+          <List sx={{ width: '100%', Width: 500 }}>
             <ListItem alignItems="flex-start">
               <ListItemAvatar>
                 <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
@@ -156,41 +186,50 @@ export default function NoticeModal() {
                     </Typography>
                   </React.Fragment>}
               />
-            </ListItem>
+              </ListItem>
+            </List>
             <Divider variant="inset" component="li" />
-            <ListItem alignItems="flex-start">
-              <ListItemAvatar>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
-              </ListItemAvatar>
-              <ListItemText
-                primary='내 게시글에 ~~이 좋아요를 눌렀습니다.'
-                secondary={
-                  <React.Fragment>
-                    <Typography sx={{ display: 'inline', marginRight: 5 }} component="span"
-                      variant="body2" color="text.primary">
-                      게시글 이름
-                    </Typography>
-                  </React.Fragment>}
-              />
-            </ListItem>
+            <Typography sx={{marginLeft: '20px'}}>
+              좋아요 알림
+            </Typography>
+            <List sx={{ width: '100%', Width: 500 }}>
+              <ListItem alignItems="flex-start">
+                <ListItemAvatar>
+                  <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
+                </ListItemAvatar>
+                <ListItemText
+                  primary='내 게시글에 ~~이 좋아요를 눌렀습니다.'
+                  secondary={
+                    <React.Fragment>
+                      <Typography sx={{ display: 'inline', marginRight: 5 }} component="span"
+                        variant="body2" color="text.primary">
+                        ~~의 마이페이지
+                      </Typography>
+                    </React.Fragment>}
+                />
+                </ListItem>
+            </List>
             <Divider variant="inset" component="li" />
-            <ListItem alignItems="flex-start">
-              <ListItemAvatar>
-                <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
-              </ListItemAvatar>
-              <ListItemText
-                primary='~~가 당신에게 DM을 보냈습니다.'
-                secondary={
-                  <React.Fragment>
-                    <Typography sx={{ display: 'inline', marginRight: 5 }} component="span"
-                      variant="body2" color="text.primary">
-                      보낸사람 이름
-                    </Typography>
-                    {'메시지 내용'}
-                  </React.Fragment>}
-              />
-            </ListItem>
-          </List>
+            <Typography sx={{marginLeft: '20px'}}>
+              DM 알림
+            </Typography>
+            <List sx={{ width: '100%', Width: 500 }}>
+              <ListItem alignItems="flex-start">
+                <ListItemAvatar>
+                  <Avatar alt="Remy Sharp" src="/static/images/avatar/1.jpg" />
+                </ListItemAvatar>
+                <ListItemText
+                  primary='내 게시글에 ~~이 좋아요를 눌렀습니다.'
+                  secondary={
+                    <React.Fragment>
+                      <Typography sx={{ display: 'inline', marginRight: 5 }} component="span"
+                        variant="body2" color="text.primary">
+                        게시글 이름
+                      </Typography>
+                    </React.Fragment>}
+                />
+              </ListItem>
+            </List>
         </Box>
       </Modal>
     </div>

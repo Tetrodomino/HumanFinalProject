@@ -8,8 +8,6 @@ export function SetWithExpiry(key, value, ttl) {
         expiry: now.getTime() + ttl * 1000 * 60,
     }
 
-    console.log(item);
-
     localStorage.setItem(key, JSON.stringify(item));
 }
 
@@ -32,6 +30,11 @@ export function GetWithExpiry(key) {
             navigate('/login')
         }
         return null;
+    }
+
+    if (key == "uid" && (isNaN(item.value) || item.value == null))
+    {
+        return -1;   
     }
 
     return item.value;
