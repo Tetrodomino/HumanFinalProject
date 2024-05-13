@@ -23,7 +23,6 @@ const LightTooltip = styled(({ className, ...props }) => (
 }));
 
 export default function SettingTel(props) {
-  console.log(props);
   const [tel, setTel] = useState('');
   const [checkingTel, setCheckingTel] = useState(props.checkingTel);
 
@@ -97,7 +96,7 @@ export default function SettingTel(props) {
               label="전화번호"
               variant="standard"
               name="tel"
-              value={tel}
+              value={tel || ''}
               onChange={handleTel}
               sx={{ mt: 2, width: '100%' }}
             />

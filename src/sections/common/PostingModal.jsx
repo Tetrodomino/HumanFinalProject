@@ -17,7 +17,7 @@ import CreateIcon from '@mui/icons-material/Create';
 import './posting.css';
 import { AntSwitch } from './postingStyle.jsx';
 import { UploadImage } from "../../api/image.js";
-import { useGetUserNicknameLS } from '../../api/customHook.jsx';
+import { useAddBoard, useGetUserNicknameLS } from '../../api/customHook.jsx';
 // import { FindImage, UploadImage2 } from "../../api/image.js";
 import { GetWithExpiry } from "../../api/LocalStorage.js";
 
@@ -25,7 +25,7 @@ import { GetWithExpiry } from "../../api/LocalStorage.js";
 export default function Posting() {
     const navigate = useNavigate();
 
-    const uid = parseInt(GetWithExpiry("uid"));
+    const uid = GetWithExpiry("uid");
 
     // uid가 로컬스토리지에 없으면 로그인 창으로 이동
     if (!uid) {
@@ -72,6 +72,11 @@ export default function Posting() {
         setPreviewUrls(previewUrls.concat(newPreviewUrls)); // 미리보기 URL 배열에 추가
     };
 
+    const addBoard = useAddBoard();
+    const addBoardForm = (sendData) => {
+        addBoard(sendData);
+    }
+
     const handleFormSubmit = async (event) => {
         event.preventDefault();
         handleClose();
@@ -93,15 +98,9 @@ export default function Posting() {
             hashTag: null
         })
 
-        axios({
-            method: "POST",
-            url: 'http://localhost:8090/board/insert',
-            data: sendData,
-            headers: { 'Content-Type': 'application/json' }
-        }).catch(error => console.log(error));
+        addBoardForm(sendData);
 
         setImages([]);
-        //setImageList([]);
         setText('');
         setTitle('');
         setPreviewUrls([]);

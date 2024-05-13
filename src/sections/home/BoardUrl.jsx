@@ -33,14 +33,11 @@ import { getBoard, getBoardList, getBoardUrl, getReplyList } from '../../api/axi
 import BoardDetail from './BoardDetail.jsx';
 
 export default function BoardUrl(props) {
-  const url = props.url;
-  const uid = props.uid;
-  const nickname = props.nickname;
-  const [open, setOpen] = useState(false);
+  const url = props.boardpath;
 
   const urlBoard = useQuery({
     queryKey: ['board', url],
-    queryFn: () => getBoardUrl(url, uid),
+    queryFn: () => getBoardUrl(url, props.uid),
   });
 
   if (urlBoard.isLoading)  {
@@ -48,13 +45,9 @@ export default function BoardUrl(props) {
       <div>로딩 중...</div>
     )
   }
+  console.log(urlBoard.data.image);
 
-  const handleOpen = (bid) => {
-    setOpen(true);
-  }
-  const handleClose = () => {
-    setOpen(false);
-  };
+  const images = urlBoard.data.image != null ? urlBoard.data.image.split(',') : null;
   
   return (
     <>
@@ -70,7 +63,7 @@ export default function BoardUrl(props) {
             title={urlBoard.data.title}
             subheader={urlBoard.data.modTime}
           />
-          <CardMedia component="img" height="194" image={`https://res.cloudinary.com/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload/${urlBoard.data.image[0]}`} alt="Paella dish" />
+          <CardMedia component="img" height="194" image={`https://res.cloudinary.com/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload/${images[0]}`} alt="Paella dish" />
           <CardContent>
             <Typography variant="body2" color="text.secondary">
               {urlBoard.data.bContents}
@@ -81,7 +74,7 @@ export default function BoardUrl(props) {
             <Button >
               <FavoriteIcon className="customHeartBtn" sx={urlBoard.data.liked ? {color: 'red'} : {color: 'blue'} }/>{urlBoard.data.likeCount}
             </Button>
-            <Button onClick={() => handleOpen(urlBoard.data.bid)}>
+            <Button onClick={() => props.handleOpen(urlBoard.data.bid)}>
               <ChatBubbleOutlineIcon />{urlBoard.data.replyCount}
             </Button>
             <Button >
@@ -94,10 +87,6 @@ export default function BoardUrl(props) {
         </Card>) : <div>
         url에 해당하는 글이 없습니다!
       </div>}
-
-      <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
-        <BoardDetail bid={urlBoard.data.bid} uid={uid} nickname={nickname} />
-      </Modal >
     </>
   );
 

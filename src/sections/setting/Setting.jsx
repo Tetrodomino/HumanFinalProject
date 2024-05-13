@@ -14,14 +14,16 @@ import Swal from "sweetalert2";
 import SettingBirth from "./SettingBirth.jsx";
 import SettingTel from "./SettingTel.jsx";
 import SettingNickname from "./SettingNickname.jsx";
-import { GetWithExpiry } from "../../api/LocalStorage.js";
+import { GetWithExpiry, SetWithExpiry } from "../../api/LocalStorage.js";
 import { FindImage, UploadImage } from "../../api/image.js";
+import { useQuery } from "@tanstack/react-query";
+import { useUpdateUser } from "../../api/customHook.jsx";
 
 export default function SettingDetail() {
   const navigate = useNavigate();
 
   // localStorage를 이용해서 user 받아오기
-  const uid = parseInt(GetWithExpiry("uid"));
+  const uid = GetWithExpiry("uid");
   const email = GetWithExpiry("email");
 
   // user 정보 초기화, 비밀번호 확인
@@ -51,12 +53,12 @@ export default function SettingDetail() {
   const [checkingTel, setCheckingTel] = useState(1);
 
   // 로그인 여부 확인
-  useEffect(() => { if (uid == null) { navigate('/login'); } }, [uid, navigate]);
+  useEffect(() => { if (uid == -1) { navigate('/login'); } }, [uid, navigate]);
 
-  // user 정보 axio로 가져와서 저장
-  useEffect(() => {
-    if (uid != null) {
-      axios.get('http://localhost:8090/user/getUser', {
+  const { isLoading } = useQuery({
+    queryKey: ['user', uid],
+    queryFn: async () => {
+      const result = await axios.get('http://localhost:8090/user/getUser', {
         params: {
           uid: uid,
         }
@@ -69,8 +71,10 @@ export default function SettingDetail() {
         setStat(res.data.statusMessage); setTel(res.data.tel);
         setBirth(res.data.birth); setSnsDomain(res.data.snsDomain);
       }).catch(error => console.log(error));
+
+      return result;
     }
-  }, [uid])
+  });
 
   // 설정창에서 값이 바뀔 때마다 저장하는 함수
   const handleUname = (e) => { setUname(e.target.value); };
@@ -83,6 +87,11 @@ export default function SettingDetail() {
 
   const handleCheckingTel = (e) => { setCheckingTel(e) };
   const handleCheckingNickname = (e) => { setCheckingNickname(e) };
+
+  const updateUser = useUpdateUser();
+  const updateUserForm = (sendData) => {
+    updateUser(sendData);
+  }
 
   // 제출
   const submitProfile = async () => {
@@ -101,41 +110,57 @@ export default function SettingDetail() {
       });
       return;
     }
-    console.log("asd" + birth)
 
     if (change !== 1) {
-      axios.post('http://localhost:8090/user/update', {
+      const sendData = {
         uname: uname,
         nickname: nickname,
-        profile: null,
+        profile: profile,
         statusMessage: statusMessage,
         snsDomain: snsDomain,
         uid: uid,
         gender: gender,
         birth: birth,
         tel: tel,
-      }).catch(error => console.log(error));
+      };
+      updateUserForm(sendData);
+
     } else {
-      console.log("이미지", image);
       const url = await UploadImage(image); // 이 줄이 비동기 작업을 기다리고 URL을 반환합니다.
-      console.log("url:", url);
       if (url) { // URL이 성공적으로 반환되었는지 확인
         setProfile(url.public_id);
-        await axios.post('http://localhost:8090/user/update', {
+        const sendData = {
           uname: uname,
           nickname: nickname,
-          profile: url.public_id, // URL을 직접 사용하여 요청을 보냅니다.
+          profile: url.public_id,
           statusMessage: statusMessage,
           snsDomain: snsDomain,
           uid: uid,
           gender: gender,
           birth: birth,
           tel: tel,
-        }).catch(error => console.log(error));
+        };
+        updateUserForm(sendData);
+        // await axios.post('http://localhost:8090/user/update', {
+        //   uname: uname,
+        //   nickname: nickname,
+        //   profile: url.public_id,
+        //   statusMessage: statusMessage,
+        //   snsDomain: snsDomain,
+        //   uid: uid,
+        //   gender: gender,
+        //   birth: birth,
+        //   tel: tel,
+        // }).catch(error => console.log(error));
       } else {
         console.log("이미지 업로드 실패: URL이 없습니다.");
       }
     }
+
+    SetWithExpiry("uid", uid, 180);
+    SetWithExpiry("emaill", email, 180);
+    SetWithExpiry("profile", profile, 180);
+    
     Swal.fire({
       icon: 'success',
       title: "설정 변경에 성공했습니다.",
@@ -185,7 +210,9 @@ export default function SettingDetail() {
     }
   };
 
-
+  if (isLoading) {
+    return (<div>로딩 중...</div>)
+  }
 
   return (
     <>

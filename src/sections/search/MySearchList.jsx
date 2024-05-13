@@ -10,6 +10,8 @@ import PlayCircleIcon from '@mui/icons-material/PlayCircle';
 import './search.css';
 import axios from "axios";
 import { useLocation } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
+import { getBoardList } from "../../api/axiosGet";
 
 export default function MySearchList() {
   
@@ -40,6 +42,11 @@ export default function MySearchList() {
     isDeleted: 0
   }]);
   const [is, setIs] = useState(false);
+
+  const { isLoading: is2, data } = useQuery({
+    queryKey: ['searchBoardList', field, field2, field3, type, count],
+    queryFn: () => getBoardList(count, field, field2, field3, query, type),
+  });
 
   useEffect(() => {
     if (query != null)

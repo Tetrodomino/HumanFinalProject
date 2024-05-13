@@ -1,5 +1,5 @@
 // 기본
-import React, { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import {
   Card, CardHeader, CardMedia, CardActions, CardContent, Avatar, Typography,
   ListItemAvatar, ListItem, List, Button, Box, Modal, Paper
@@ -26,12 +26,13 @@ import './board.css';
 
 import Carousel from 'react-material-ui-carousel'
 import { useLocation, useNavigate } from "react-router-dom";
-import { useGetUserNicknameLS } from '../../api/customHook.jsx';
+import { useAddLike, useGetUserNicknameLS } from '../../api/customHook.jsx';
 import { useGetBoard, useGetBoardByUrl, useGetBoardList, useGetReplyList } from './BoardJS.js';
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { getBoard, getBoardList, getBoardUrl, getReplyList } from '../../api/axiosGet.js';
 import BoardDetail from './BoardDetail.jsx';
 import BoardUrl from './BoardUrl.jsx';
+import { like } from '../../api/axiosPost.js';
 
 export default function Board() {
   const navigate = useNavigate();
@@ -60,36 +61,21 @@ export default function Board() {
   };
 
   const location = useLocation();
+  const path = location.pathname.split('/');
+  const path2 = path[path.length - 1];
 
-  const path2 = useMemo(() => {
-      const path = location.pathname.split('/');
-      return path[path.length - 1];
-  }, [])
-
+  /////////////////// useQuery로 BoardList 받기 ///////////////////
   const dataList = useQuery({
     queryKey: ['boardList', uid],
     queryFn: () => getBoardList(10, uid),
   });
 
-  // const ReReplyFormSubmit = (e) => {
-  //   e.preventDefault();
-  //   var sendData = JSON.stringify({
-  //     rid: replyList.rid,
-  //     uid: uid,
-  //     rrContents: text,
-  //     nickname: nickname,
-  //   })
+  const addLike = useAddLike();
+  const addLikeForm = (sendData: string) => {
+    addLike(sendData);
+  }
 
-  //   axios({
-  //     method: "POST",
-  //     url: 'http://localhost:8090/board/re_Reply',
-  //     data: sendData,
-  //     headers: { 'Content-Type': 'application/json' }
-  //   }).catch(error => console.log(error));
-
-  //   setText('');
-  // }
-
+  // 좋아요 버튼 누를 때 넘기기
   function handleButtonLike(bid, uid2) {
     var sendData = JSON.stringify({
       uid: uid,
@@ -97,13 +83,7 @@ export default function Board() {
       oid: bid,
     })
 
-    axios({
-      method: "POST",
-      url: 'http://localhost:8090/board/like',
-      data: sendData,
-      headers: { 'Content-Type': 'application/json' }
-    })
-      .catch(error => console.log(error));
+    addLikeForm(sendData);
   }
 
   if (dataList.isLoading) {
@@ -112,8 +92,7 @@ export default function Board() {
   
   return (
     <>
-      {/* {path2 && <BoardUrl path={path2} uid={uid} nickname={nickname} />} */}
-
+      {path2 && <BoardUrl boardpath={path2} uid={uid} nickname={nickname} handleOpen={handleOpen} />}
       {/* boardList */}
       {dataList.data && dataList.data.map((data) => (
         <Card key={data.bid} sx={{ width: "70%", marginTop: '30px', border: '1px solid lightgrey' }}>
@@ -127,9 +106,9 @@ export default function Board() {
             title={data.title}
             subheader={data.modTime}
           />
-          <CardMedia component="img" height="194" image={`https://res.cloudinary.com/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload/${data.image[0]}`} alt="Paella dish" />
+          <CardMedia component="img" height="194" image={`https://res.cloudinary.com/${process.env.REACT_APP_CLOUDINARY_CLOUD_NAME}/image/upload/${data.image.split(',')[0]}`} alt="Paella dish" />
           <CardContent>
-            <Typography variant="body2" color="text.secondary">
+            <Typography component={'div'} variant="body2" color="text.secondary">
               {data.bContents}
             </Typography>
           </CardContent>
@@ -152,7 +131,10 @@ export default function Board() {
       ))}
 
       {/* 게시글 모달 */}
-      <BoardDetail open={open} bid={bid} uid={uid} nickname={nickname} />
+      <Modal open={open} onClose={handleClose} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
+        <BoardDetail handleClose={handleClose} bid={bid} uid={uid}
+        nickname={nickname} handleButtonLike={handleButtonLike} />
+      </Modal>
     </>
   );
 

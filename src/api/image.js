@@ -1,5 +1,9 @@
 import { Cloudinary } from "@cloudinary/url-gen/index";
 
+/** cloudinary에 이미지를 업로드하기 위한 함수
+ * @param {*} image 업로드할 이미지 url
+ * @returns 
+ */
 export async function UploadImage(image) {
     if (!image)
     {
@@ -31,6 +35,10 @@ export async function UploadImage(image) {
     }
 }
 
+/** url을 통해 이미지를 불러오는 함수
+ * @param {*} url 이미지 주소 string 
+ * @returns 
+ */
 export function FindImage(url) {
     const cld = new Cloudinary({
         cloud: {

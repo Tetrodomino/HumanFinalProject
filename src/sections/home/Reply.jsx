@@ -26,7 +26,7 @@ import './board.css';
 
 import Carousel from 'react-material-ui-carousel'
 import { useLocation, useNavigate } from "react-router-dom";
-import { useGetUserNicknameLS } from '../../api/customHook.jsx';
+import { useAddReply, useGetUserNicknameLS } from '../../api/customHook.jsx';
 import { useGetBoard, useGetBoardByUrl, useGetBoardList, useGetReplyList } from './BoardJS.js';
 import { useQuery } from '@tanstack/react-query';
 import { getBoard, getBoardList, getBoardUrl, getReplyList } from '../../api/axiosGet.js';
@@ -44,12 +44,17 @@ export default function Reply(props) {
     queryFn: () => getReplyList(bid, 0, 20),
   });
 
+  const addReply = useAddReply();
+  const addReplyForm = (sendData) => {
+    addReply(sendData);
+  }
+
   if (replyList.isLoading)  {
       return (
         <div>로딩 중...</div>
       )
   }
-
+  
   const handleFormSubmit = (e) => {
     e.preventDefault();
 
@@ -60,12 +65,7 @@ export default function Reply(props) {
       nickname: nickname,
     })
 
-    axios({
-      method: "POST",
-      url: 'http://localhost:8090/board/reply',
-      data: sendData,
-      headers: { 'Content-Type': 'application/json' }
-    }).catch(error => console.log(error));
+    addReply(sendData);
 
     setText('');
   };
@@ -100,7 +100,7 @@ export default function Reply(props) {
                     {data.nickname}
                   </Typography>
                 </ListItem>
-                <Typography variant="body2" color="text.secondary" sx={{ padding: 2, overflowWrap: 'break-word', }}>
+                <Typography component={'div'} variant="body2" color="text.secondary" sx={{ padding: 2, overflowWrap: 'break-word', }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                       <div>
                         {data.rContents != null && (expandedContents[index] ? data.rContents : data.rContents.slice(0, 28))}

@@ -1,5 +1,10 @@
 import { useNavigate } from "react-router-dom";
 
+/** localStorage에 key 값을 만료시간을 두고 저장하기
+ * @param {*} key 저장할 키 이름
+ * @param {*} value 저장할 값
+ * @param {*} ttl 만료시간 (1당 1분)
+ */
 export function SetWithExpiry(key, value, ttl) {
     const now = new Date();
 
