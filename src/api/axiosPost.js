@@ -1,5 +1,44 @@
 import axios from "axios"
 
+/** 유저 등록
+ * @param {*} hashuid google 로그인에서만 만들어지는 hash형태의 uid
+ * @param {*} provider google 로그인이면 1, 일반 로그인이면 0
+ * @param {*} email 입력한 이메일
+ * @param {*} pwd 비밀번호
+ * @returns 
+ */
+export const userRegister = async (hashuid: string, provider: number, email: string, pwd: string) => {
+
+    return axios.post('http://localhost:8090/user/register', {
+        hashuid: hashuid,
+        provider: provider,
+        email: email,
+        pwd: pwd,
+    }).catch(error => {
+        console.log('axiosget.js: userRegister error!');
+        console.log(error);
+    });
+}
+
+/** 비밀번호만 바꾸는 유저정보 수정
+ * @param {*} uid 유저번호
+ * @param {*} pwd1 입력된 비밀번호 
+ * @param {*} pwd2 비밀번호 확인
+ * @returns 
+ */
+export const userUpdatePwd = async (uid: number, pwd1: string, pwd2: string) => {
+
+    return axios.post('http://localhost:8090/user/updatepwd', {
+        uid: uid,
+        pwd1: pwd1,
+        pwd2: pwd2,
+    }).then((response) => response.data)
+    .catch(error => {
+        console.log('axiosget.js: userUpdatePwd error!');
+        console.log(error);
+    });
+}
+
 /** 사용자 정보 업데이트
  * @param {*} sendData 보내줄 정보의 Json String 데이터, 이하는 sendData에 넣어야 할 정보
  * @param {*} uid 유저번호
@@ -127,7 +166,7 @@ export const insertReReply = async (sendData: string) => {
 export const like = async (sendData: string) => {
     return axios({
         method: "POST",
-        url: 'http://localhost:8090/board/like',
+        url: 'http://localhost:8090/like/update',
         data: sendData,
         headers: { 'Content-Type': 'application/json' }
     }).catch(error => {

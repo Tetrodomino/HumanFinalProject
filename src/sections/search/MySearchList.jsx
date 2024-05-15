@@ -1,5 +1,5 @@
 // 기본
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { Avatar, Box, Button, Chip, Divider, Grid, Paper, Stack, Typography } from "@mui/material";
 
 // 아이콘
@@ -11,14 +11,14 @@ import './search.css';
 import axios from "axios";
 import { useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { getBoardList } from "../../api/axiosGet";
+import { getBoardList, getBoardListCount } from "../../api/axiosGet";
+import { useGetBoardList } from "../../api/queryHook";
 
 export default function MySearchList() {
   
   const query = sessionStorage.getItem("search");
   const location = useLocation();
   
-  const [isLoading, setIsLoading] = useState(false);
   const [field, setField] = useState('title');
   const [field2, setField2] = useState('');
   const [field3, setField3] = useState('');
@@ -26,82 +26,52 @@ export default function MySearchList() {
   const [count, setCount] = useState(12);
   const [page, setPage] = useState(0);
   const [research, setResearch] = useState(false);
-  const [boardList, setBoardList] = useState([{
-    bid: -1,
-    uid: -1,
-    title: '',
-    bContents: '',
-    modTime: null,
-    viewCount: 0,
-    likeCount: 0,
-    replyCount: 0,
-    image: '',
-    shareUrl: '',
-    nickname: '',
-    hashTag: '',
-    isDeleted: 0
-  }]);
-  const [is, setIs] = useState(false);
+  const [pageLoading, setPageLoading] = useState(true);
 
-  const { isLoading: is2, data } = useQuery({
-    queryKey: ['searchBoardList', field, field2, field3, type, count],
-    queryFn: () => getBoardList(count, field, field2, field3, query, type),
-  });
+  const [boardList, isLoading, isError] = useGetBoardList(count, field, field2, field3, query, type);
+
+  const { data: allcount } = useQuery({
+    queryKey: ['BoardCount', field, field2, field3, type, query, research],
+    queryFn: () => getBoardListCount(field, field2, field3, query, type),
+    placeholderData: (p) => p,
+  })
 
   useEffect(() => {
-    if (query != null)
-    {
-      axios.get('http://localhost:8090/board/list', {
-        params: {
-          c: count,
-          f: field,
-          f2: field2,
-          f3: field3,
-          q: query,
-          type: type,
-        }
-      }).then(res => {
-        setBoardList(res.data);
-        setResearch(true);
-        if (res.data.length > 0)
-        {
-          setIs(true);
-        }
-        else
-        {
-          setIs(false);
-        }
-      })
-      .catch(error => console.log(error));
-    }
-    else
-    {
-      setIs(false);
-    }
-  }, [query, page, research]);
+    if (count >= allcount && allcount !== undefined)
+      setPageLoading(false);
+    else if (count < allcount && allcount !== undefined)
+      setPageLoading(true);
+  }, [count, page, allcount])
 
   // 무한 스크롤
-
   const callback = (entries: IntersectionObserverEntry[]) => {
     const target = entries[0];
-    if (target.isIntersecting && !isLoading)
+    if (target.isIntersecting && pageLoading)
     {
       setPage((prevpage) => prevpage + 1);
       setCount((prevcount) => prevcount + 3);
     }
   };
-
-  useEffect(() => {
-    const observer =new IntersectionObserver(callback, {
-      rootMargin: '0px 0px 0px 0px',
-      threshold: 0,
-    })
-    const observerTarget = document.getElementById("observe");
-
-    if (observerTarget) {
-      observer.observe(observerTarget);
-    }
-  }, []);
+  
+  useLayoutEffect(() => {
+    setTimeout(() => {
+      const observer =new IntersectionObserver(callback, {
+        rootMargin: '0px 0px 0px 0px',
+        threshold: 0,
+      })
+  
+      const observerTarget = document.getElementById("observe");
+  
+      if (observerTarget) {
+        observer.observe(observerTarget);
+      }
+      return () => {
+        if (observer && observerTarget) {
+          observer.unobserve(observerTarget);
+        }
+      };
+    }, 100)
+  }, [page]);
 
   const handleSearch = (i) => {
     if (i === 1)
@@ -112,6 +82,7 @@ export default function MySearchList() {
       setType(1);
       setCount(12);
       setResearch(false);
+      setPageLoading(true);
     }
     else if (i === 2)
     {
@@ -121,6 +92,7 @@ export default function MySearchList() {
       setType(1);
       setCount(12);
       setResearch(false);
+      setPageLoading(true);
     }
     else if (i === 3)
     {
@@ -130,6 +102,7 @@ export default function MySearchList() {
       setType(2);
       setCount(12);
       setResearch(false);
+      setPageLoading(true);
     }
     else if (i === 4)
     {
@@ -139,6 +112,7 @@ export default function MySearchList() {
       setType(1);
       setCount(12);
       setResearch(false);
+      setPageLoading(true);
     }
     else if (i === 5)
     {
@@ -148,7 +122,12 @@ export default function MySearchList() {
       setType(3);
       setCount(12);
       setResearch(false);
+      setPageLoading(true);
     }
+  }
+
+  if (isLoading) {
+    return (<div>로딩 중...</div>)
   }
   
   return (
@@ -189,7 +168,7 @@ export default function MySearchList() {
             
             {/* 목록 */}
             <Grid container>
-              {is && 
+              {boardList && 
                 boardList.map((board, idx) => {
                   return <Grid item xs={6} md={4} key={idx}>
                       <Paper elevation={2} className="uploadlist">
@@ -203,7 +182,7 @@ export default function MySearchList() {
                     </Grid>
                 })
               }
-              {!is && 
+              {!boardList && 
                 <div>
                   검색 결과가 없습니다!
                 </div>
